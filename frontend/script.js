@@ -1,155 +1,27 @@
-const userId = localStorage.getItem("userId") || prompt("Enter Telegram ID:");
-localStorage.setItem("userId", userId);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Runner</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
+    
+    <div id="coinDisplay">Coins: <span id="coinCount">0</span></div>
 
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-const bullets = [];
-const enemies = [];
-let coinsEarned = 0;
+    <div id="controls">
+        <button id="leftBtn" class="control-btn">Left</button>
+        <button id="rightBtn" class="control-btn">Right</button>
+        <button id="shootBtn" class="control-btn">Shoot</button>
+    </div>
 
-// 📌 Load Images
-const spaceshipImg = new Image();
-spaceshipImg.src = "assets/spaceship.png";
+    <div id="leaderboardScreen">
+        <h1>Leaderboard</h1>
+        <p id="leaderboardContent">Loading...</p>
+    </div>
 
-const enemyImg = new Image();
-enemyImg.src = "assets/enemy.png";
-
-const bulletImg = new Image();
-bulletImg.src = "assets/bullet.png";
-
-const backgroundImg = new Image();
-backgroundImg.src = "assets/background.jpg";
-
-// 📌 Load Sounds
-const gameMusic = new Audio("assets/game-music.mp3");
-const explosionSound = new Audio("assets/explosion.mp3");
-
-// 📌 Start Background Music (On First Click)
-document.addEventListener("click", () => {
-    gameMusic.loop = true;
-    gameMusic.play().catch((error) => console.log("Autoplay blocked, user interaction needed."));
-});
-
-// 📌 Spaceship Data
-const spaceship = { x: 175, y: 500, width: 50, height: 50, speed: 10 };
-
-// 📌 Update Coins
-function updateCoins(coins) {
-    fetch("https://your-bot-render-url.com/update-coins", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, coins }),
-    })
-        .then((res) => res.json())
-        .then((data) => {
-            if (data.success) {
-                coinsEarned += data.coinsAdded;
-                document.getElementById("coinCount").innerText = coinsEarned;
-            }
-        });
-}
-
-// 📌 Get Leaderboard
-function fetchLeaderboard() {
-    fetch("https://your-bot-render-url.com/leaderboard")
-        .then((res) => res.json())
-        .then((players) => {
-            let leaderboardText = "";
-            players.forEach((player, index) => {
-                leaderboardText += `${index + 1}. ${player.username} - ${player.coins} coins\n`;
-            });
-            document.getElementById("leaderboardContent").innerText = leaderboardText;
-        });
-}
-
-// 📌 Draw Functions
-function drawSpaceship() {
-    ctx.drawImage(spaceshipImg, spaceship.x, spaceship.y, spaceship.width, spaceship.height);
-}
-
-function drawBullets() {
-    bullets.forEach((bullet) => {
-        ctx.drawImage(bulletImg, bullet.x, bullet.y, 10, 20);
-    });
-}
-
-function drawEnemies() {
-    enemies.forEach((enemy) => {
-        ctx.drawImage(enemyImg, enemy.x, enemy.y, 40, 40);
-    });
-}
-
-// 📌 Game Logic
-function update() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
-
-    drawSpaceship();
-    drawEnemies();
-    drawBullets();
-
-    bullets.forEach((bullet, index) => {
-        bullet.y -= 5;
-        if (bullet.y < 0) bullets.splice(index, 1);
-    });
-
-    enemies.forEach((enemy, index) => {
-        enemy.y += 2;
-        if (enemy.y > canvas.height) enemies.splice(index, 1);
-
-        // 📌 Check for Game Over (Enemy Collides with Player)
-        if (
-            enemy.x < spaceship.x + spaceship.width &&
-            enemy.x + 40 > spaceship.x &&
-            enemy.y < spaceship.y + spaceship.height &&
-            enemy.y + 40 > spaceship.y
-        ) {
-            alert("Game Over! You crashed!");
-            document.location.reload();
-        }
-    });
-
-    // 📌 Collision Detection (Destroy Enemies)
-    enemies.forEach((enemy, eIndex) => {
-        bullets.forEach((bullet, bIndex) => {
-            if (Math.abs(bullet.x - enemy.x) < 20 && Math.abs(bullet.y - enemy.y) < 20) {
-                enemies.splice(eIndex, 1);
-                bullets.splice(bIndex, 1);
-                explosionSound.play();
-                updateCoins(5);
-            }
-        });
-    });
-
-    requestAnimationFrame(update);
-}
-
-// 📌 Player Controls (Smoother Movement)
-let moveLeft = false;
-let moveRight = false;
-
-document.getElementById("leftBtn").addEventListener("mousedown", () => (moveLeft = true));
-document.getElementById("leftBtn").addEventListener("mouseup", () => (moveLeft = false));
-document.getElementById("rightBtn").addEventListener("mousedown", () => (moveRight = true));
-document.getElementById("rightBtn").addEventListener("mouseup", () => (moveRight = false));
-
-function movePlayer() {
-    if (moveLeft) spaceship.x = Math.max(0, spaceship.x - spaceship.speed);
-    if (moveRight) spaceship.x = Math.min(canvas.width - spaceship.width, spaceship.x + spaceship.speed);
-    requestAnimationFrame(movePlayer);
-}
-
-movePlayer();
-
-// 📌 Shoot Bullets
-document.getElementById("shootBtn").addEventListener("click", () => {
-    bullets.push({ x: spaceship.x + 22, y: spaceship.y });
-});
-
-// 📌 Spawn Enemies
-setInterval(() => {
-    enemies.push({ x: Math.random() * (canvas.width - 40), y: 0 });
-}, 2000);
-
-update();
-fetchLeaderboard();
+    <script src="script.js"></script>
+</body>
+</html>
