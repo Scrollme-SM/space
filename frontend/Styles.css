@@ -1,0 +1,14 @@
+body {
+    text-align: center;
+    background-color: black;
+    color: white;
+}
+canvas {
+    border: 2px solid white;
+}
+button {
+    background: green;
+    color: white;
+    padding: 10px;
+    margin: 5px;
+}
