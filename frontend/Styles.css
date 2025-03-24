@@ -3,12 +3,38 @@ body {
     background-color: black;
     color: white;
 }
+
 canvas {
     border: 2px solid white;
+    display: block;
+    margin: auto;
 }
-button {
-    background: green;
+
+#coinDisplay {
+    font-size: 20px;
+    color: yellow;
+    margin: 10px;
+}
+
+#controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.control-btn {
+    width: 100px;
+    height: 50px;
+    font-size: 18px;
+    background-color: #333;
     color: white;
-    padding: 10px;
+    border: 2px solid #fff;
+    border-radius: 10px;
     margin: 5px;
+    text-align: center;
+    cursor: pointer;
+}
+
+#leaderboardScreen {
+    margin-top: 20px;
 }
