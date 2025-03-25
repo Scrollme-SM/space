@@ -98,6 +98,16 @@ function drawExplosions() {
     });
 }
 
+// 📌 Pixel-Based Collision Detection
+function isPixelCollision(rect1, rect2) {
+    return (
+        rect1.x < rect2.x + rect2.width &&
+        rect1.x + rect1.width > rect2.x &&
+        rect1.y < rect2.y + rect2.height &&
+        rect1.y + rect1.height > rect2.y
+    );
+}
+
 // 📌 Game Update Loop
 let bgY = 0;
 function update() {
@@ -122,41 +132,33 @@ function update() {
         if (bullet.y < 0) bullets.splice(index, 1);
     });
 
-    enemies.forEach((enemy, index) => {
+    enemies.forEach((enemy, eIndex) => {
         enemy.y += 2;
         enemy.x += Math.sin(enemy.y * 0.05) * 2;  // ⬅️ Move enemy left-right in a curve
 
-        if (enemy.y > canvas.height) enemies.splice(index, 1);
+        if (enemy.y > canvas.height) enemies.splice(eIndex, 1);
 
         // 📌 Check for Game Over (Enemy Collides with Player)
-        if (
-            enemy.x < spaceship.x + spaceship.width &&
-            enemy.x + 40 > spaceship.x &&
-            enemy.y < spaceship.y + spaceship.height &&
-            enemy.y + 40 > spaceship.y
-        ) {
+        if (isPixelCollision(enemy, spaceship)) {
             gameOver = true;
             alert("Game Over! Restarting...");
             setTimeout(() => location.reload(), 2000);
         }
     });
 
-    // 📌 Collision Detection
-    enemies.forEach((enemy, eIndex) => {
-        bullets.forEach((bullet, bIndex) => {
-            if (Math.abs(bullet.x - enemy.x) < 20 && Math.abs(bullet.y - enemy.y) < 20) {
-                bullets.splice(bIndex, 1);
+    // 📌 FIXED: Bullet & Enemy Collision Detection (Enemies Now Destroy Properly)
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        for (let j = bullets.length - 1; j >= 0; j--) {
+            if (isPixelCollision(enemies[i], bullets[j])) {
+                bullets.splice(j, 1);  // Remove bullet
+                explosions.push({ x: enemies[i].x, y: enemies[i].y });  // Show explosion
+                enemies.splice(i, 1);  // Remove enemy
                 explosionSound.play();
-                
-                explosions.push({ x: enemy.x, y: enemy.y });
-                setTimeout(() => {
-                    enemies.splice(eIndex, 1);
-                }, 100);
-
                 updateCoins(5);
+                break; // Ensure only one bullet destroys an enemy
             }
-        });
-    });
+        }
+    }
 
     requestAnimationFrame(update);
 }
@@ -196,12 +198,12 @@ document.getElementById("rightBtn").addEventListener("touchend", () => moveRight
 
 // 📌 Shoot Bullets
 document.getElementById("shootBtn").addEventListener("click", () => {
-    bullets.push({ x: spaceship.x + 22, y: spaceship.y });
+    bullets.push({ x: spaceship.x + 22, y: spaceship.y, width: 10, height: 20 });
 });
 
 // 📌 Spawn Enemies (Every 2 Sec)
 setInterval(() => {
-    enemies.push({ x: Math.random() * (canvas.width - 40), y: 0 });
+    enemies.push({ x: Math.random() * (canvas.width - 40), y: 0, width: 40, height: 40 });
 }, 2000);
 
 update();
