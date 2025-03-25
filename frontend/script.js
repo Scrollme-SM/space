@@ -208,3 +208,27 @@ setInterval(() => {
 
 update();
 fetchScores();
+
+document.getElementById("convertBtn").addEventListener("click", async () => {
+    let coinsToConvert = prompt("Enter coins to convert (Min: 100)");
+    coinsToConvert = parseInt(coinsToConvert);
+
+    if (!coinsToConvert || coinsToConvert < 100) {
+        alert("❌ You must enter at least 100 coins.");
+        return;
+    }
+
+    try {
+        const response = await fetch("https://your-server-url.com/request-token-conversion", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId, username: "Player", coinsRequested: coinsToConvert })
+        });
+
+        const data = await response.json();
+        alert(data.message);
+    } catch (error) {
+        console.error("Error:", error);
+        alert("❌ Conversion failed. Please try again.");
+    }
+});
