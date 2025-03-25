@@ -3,8 +3,10 @@ localStorage.setItem("userId", userId);
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+
 const bullets = [];
 const enemies = [];
+const explosions = [];
 let coinsEarned = 0;
 let dailyScore = 0;
 let highScore = 0;
@@ -33,7 +35,7 @@ const explosionSound = new Audio("./assets/explosion.mp3");
 // 📌 Start Background Music (On First Click)
 document.addEventListener("click", () => {
     gameMusic.loop = true;
-    gameMusic.play().catch((error) => console.log("Autoplay blocked, user interaction needed."));
+    gameMusic.play().catch(() => console.log("Autoplay blocked."));
 });
 
 // 📌 Fetch Scores from Backend
@@ -48,12 +50,12 @@ async function fetchScores() {
     }
 }
 
-// 📌 Draw Scores in Canvas
+// 📌 Draw Scores Inside Canvas
 function drawScores() {
     ctx.fillStyle = "white";
     ctx.font = "18px Arial";
     ctx.fillText(`🏆 High Score: ${highScore}`, 10, 30);
-    ctx.fillText(`🎯 Daily Score: ${dailyScore} / 100`, 10, 50);
+    ctx.fillText(`🎯 Daily Score: ${dailyScore}/100`, 10, 50);
     ctx.fillText(`💰 Current Score: ${coinsEarned}`, 10, 70);
 }
 
@@ -92,13 +94,24 @@ function drawEnemies() {
     });
 }
 
+// 📌 Draw Explosions
+function drawExplosions() {
+    explosions.forEach((explosion, index) => {
+        ctx.drawImage(explosionImg, explosion.x, explosion.y, 50, 50);
+        setTimeout(() => {
+            explosions.splice(index, 1);
+        }, 200);
+    });
+}
+
 // 📌 Game Update Loop
 let bgY = 0;
 function update() {
     if (gameOver) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
+    // 📌 Background Animation
     bgY += 2;
     if (bgY >= canvas.height) bgY = 0;
     ctx.drawImage(backgroundImg, 0, bgY, canvas.width, canvas.height);
@@ -108,6 +121,7 @@ function update() {
     drawSpaceship();
     drawEnemies();
     drawBullets();
+    drawExplosions();
 
     bullets.forEach((bullet, index) => {
         bullet.y -= 5;
@@ -131,13 +145,47 @@ function update() {
         }
     });
 
+    // 📌 Collision Detection
+    enemies.forEach((enemy, eIndex) => {
+        bullets.forEach((bullet, bIndex) => {
+            if (Math.abs(bullet.x - enemy.x) < 20 && Math.abs(bullet.y - enemy.y) < 20) {
+                bullets.splice(bIndex, 1);
+                explosionSound.play();
+                
+                explosions.push({ x: enemy.x, y: enemy.y });
+                setTimeout(() => {
+                    enemies.splice(eIndex, 1);
+                }, 100);
+
+                updateCoins(5);
+            }
+        });
+    });
+
     requestAnimationFrame(update);
 }
 
-// 📌 Controls
-document.getElementById("leftBtn").addEventListener("mousedown", () => spaceship.x = Math.max(0, spaceship.x - spaceship.speed));
-document.getElementById("rightBtn").addEventListener("mousedown", () => spaceship.x = Math.min(canvas.width - spaceship.width, spaceship.x + spaceship.speed));
-document.getElementById("shootBtn").addEventListener("click", () => bullets.push({ x: spaceship.x + 22, y: spaceship.y }));
+// 📌 Smooth Movement
+let moveLeft = false;
+let moveRight = false;
+
+document.getElementById("leftBtn").addEventListener("mousedown", () => moveLeft = true);
+document.getElementById("leftBtn").addEventListener("mouseup", () => moveLeft = false);
+document.getElementById("rightBtn").addEventListener("mousedown", () => moveRight = true);
+document.getElementById("rightBtn").addEventListener("mouseup", () => moveRight = false);
+
+function movePlayer() {
+    if (moveLeft) spaceship.x = Math.max(0, spaceship.x - spaceship.speed);
+    if (moveRight) spaceship.x = Math.min(canvas.width - spaceship.width, spaceship.x + spaceship.speed);
+    requestAnimationFrame(movePlayer);
+}
+
+movePlayer();
+
+// 📌 Shoot Bullets
+document.getElementById("shootBtn").addEventListener("click", () => {
+    bullets.push({ x: spaceship.x + 22, y: spaceship.y });
+});
 
 // 📌 Spawn Enemies
 setInterval(() => {
