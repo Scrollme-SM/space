@@ -56,28 +56,30 @@ function updateScoreUI() {
 // 📌 Spaceship Data
 const spaceship = { x: 175, y: 500, width: 50, height: 50, speed: 6 };
 
-// 📌 Update Coins with Daily Limit (100), But Keep High Score Unlimited
+// 📌 Update Coins with Correct Logic
 function updateCoins(coins) {
-    if (dailyScore < 100) {
-        let coinsToAdd = Math.min(coins, 100 - dailyScore); // Ensures daily cap stays at 100
-        dailyScore += coinsToAdd;
-        coinsEarned += coins; // Current score should keep increasing
-
-        // Update High Score if the player sets a new record
-        if (coinsEarned > highScore) {
-            highScore = coinsEarned;
-            document.getElementById("highScore").innerText = highScore;
-        }
-
-        updateScoreUI();
-
-        // Save daily score to backend, but NOT limit high score
-        fetch("https://your-server-url.com/update-score", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId, score: coinsToAdd })  // Only send allowed daily score
-        }).catch((err) => console.log("Error updating score:", err));
+    let coinsToAdd = Math.min(coins, 100 - dailyScore); // Limit dailyScore to 100
+    if (coinsToAdd > 0) {
+        dailyScore += coinsToAdd; // Update daily score (max 100)
     }
+
+    coinsEarned += coins; // Keep current session score increasing (no limit)
+
+    if (coinsEarned > highScore) {
+        highScore = coinsEarned; // Update high score if it's a new record
+    }
+
+    // Update UI
+    document.getElementById("currentScore").innerText = coinsEarned;
+    document.getElementById("dailyScore").innerText = dailyScore;
+    document.getElementById("highScore").innerText = highScore;
+
+    // Send only dailyScore to backend (highScore & currentScore are local)
+    fetch("https://your-server-url.com/update-score", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, score: coinsToAdd })  // Send only allowed daily score
+    }).catch((err) => console.log("Error updating score:", err));
 }
 
 // 📌 Get Leaderboard
