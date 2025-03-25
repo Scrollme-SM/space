@@ -11,27 +11,13 @@ canvas {
     border: 2px solid white;
     display: block;
     margin: auto;
-    background-image: url("assets/background.jpg");
-    background-size: cover;
-}
-
-/* 📌 Score Display */
-#scoreDisplay {
-    display: flex;
-    justify-content: space-around;
-    margin: 10px;
-    font-size: 18px;
-}
-
-/* 📌 Leaderboard */
-#leaderboardScreen {
-    margin-top: 20px;
 }
 
 /* 📌 Controls */
 #controls {
     display: flex;
     justify-content: center;
+    gap: 8px;
     margin-top: 10px;
 }
 
@@ -40,38 +26,13 @@ canvas {
     color: white;
     border: none;
     padding: 12px;
-    margin: 5px;
     font-size: 16px;
     border-radius: 5px;
     cursor: pointer;
+    width: 90px;
     transition: transform 0.1s ease-in-out;
 }
 
-/* 📌 Button Click Animation */
 .control-btn:active {
     transform: scale(0.9);
-}
-
-/* 📌 Convert Button */
-#convertBtn {
-    background: #FF9800;
-    color: white;
-    border: none;
-    padding: 12px;
-    margin-top: 10px;
-    font-size: 16px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-/* 📌 Responsive Design */
-@media (max-width: 600px) {
-    #controls {
-        flex-direction: column;
-    }
-
-    .control-btn {
-        width: 80%;
-        margin: 5px auto;
-    }
 }
