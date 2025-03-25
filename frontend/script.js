@@ -6,6 +6,8 @@ const ctx = canvas.getContext("2d");
 const bullets = [];
 const enemies = [];
 let coinsEarned = 0;
+let dailyScore = 0;
+let highScore = 0;
 let gameOver = false;
 
 // 📌 Load Images
@@ -31,37 +33,60 @@ document.addEventListener("click", () => {
     gameMusic.play().catch((error) => console.log("Autoplay blocked, user interaction needed."));
 });
 
+// 📌 Fetch Scores from Backend
+async function fetchScores() {
+    try {
+        const response = await fetch(`https://your-server-url.com/get-scores?userId=${userId}`);
+        const data = await response.json();
+        highScore = data.highScore || 0;
+        dailyScore = data.dailyScore || 0;
+        document.getElementById("highScore").innerText = highScore;
+        document.getElementById("dailyScore").innerText = dailyScore;
+    } catch (error) {
+        console.error("Error fetching scores:", error);
+    }
+}
+
+// 📌 Update Score UI
+function updateScoreUI() {
+    document.getElementById("currentScore").innerText = coinsEarned;
+    document.getElementById("dailyScore").innerText = dailyScore;
+}
+
 // 📌 Spaceship Data
 const spaceship = { x: 175, y: 500, width: 50, height: 50, speed: 6 };
 
-// 📌 Update Coins
+// 📌 Update Coins with Daily Cap
 function updateCoins(coins) {
-    coinsEarned += coins;  // Increase local coin count
-    document.getElementById("coinCount").innerText = coinsEarned; // Update UI
+    if (dailyScore < 100) {
+        coinsEarned += coins;
+        dailyScore += coins;
+        if (dailyScore > 100) dailyScore = 100; // Enforce daily limit
 
-    // Send coin update to the bot
-    fetch("https://your-bot-render-url.com/update-coins", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, coins })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            console.log("Coins updated on server");
+        if (coinsEarned > highScore) {
+            highScore = coinsEarned;
+            document.getElementById("highScore").innerText = highScore;
         }
-    })
-    .catch(err => console.log("Error updating coins:", err));
+
+        updateScoreUI();
+
+        // Save to backend
+        fetch("https://your-server-url.com/update-score", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId, score: coins })
+        }).catch((err) => console.log("Error updating score:", err));
+    }
 }
 
 // 📌 Get Leaderboard
 function fetchLeaderboard() {
-    fetch("https://your-bot-render-url.com/leaderboard")
+    fetch("https://your-server-url.com/leaderboard")
         .then((res) => res.json())
         .then((players) => {
             let leaderboardText = "";
             players.forEach((player, index) => {
-                leaderboardText += `${index + 1}. ${player.username} - ${player.coins} coins\n`;
+                leaderboardText += `${index + 1}. ${player.username} - ${player.dailyScore} coins\n`;
             });
             document.getElementById("leaderboardContent").innerText = leaderboardText;
         });
@@ -124,7 +149,7 @@ function update() {
                 enemies.splice(eIndex, 1);
                 bullets.splice(bIndex, 1);
                 explosionSound.play();
-                updateCoins(5);  // 📌 Increase coins when enemy is destroyed
+                updateCoins(5); // 📌 Increase coins when enemy is destroyed
             }
         });
     });
@@ -165,4 +190,5 @@ setInterval(() => {
 }, 2000);
 
 update();
+fetchScores();
 fetchLeaderboard();
