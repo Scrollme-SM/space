@@ -1,3 +1,4 @@
+const PORT = process.env.PORT || 3000;
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
@@ -24,6 +25,17 @@ const UserSchema = new mongoose.Schema({
     lastCoinUpdate: { type: Date, default: null }
 });
 const User = mongoose.model('User', UserSchema);
+
+// 📌 Token Conversion Request Schema
+const TokenRequestSchema = new mongoose.Schema({
+    userId: String,
+    username: String,
+    coinsRequested: Number,
+    tokenAmount: Number,
+    status: { type: String, default: "Pending" }, // Pending, Approved, Rejected
+    requestDate: { type: Date, default: Date.now }
+});
+const TokenRequest = mongoose.model("TokenRequest", TokenRequestSchema);
 
 // 📌 API: Fetch High Score & Daily Score
 app.get('/get-scores', async (req, res) => {
@@ -115,6 +127,60 @@ app.post('/reset-leaderboard', async (req, res) => {
     }
 });
 
-// 📌 Start Server
-const PORT = process.env.PORT || 3000;
+// 📌 API: Request Token Conversion
+app.post("/request-token-conversion", async (req, res) => {
+    const { userId, username, coinsRequested } = req.body;
+    const conversionRate = 0.01; // Example: 1 coin = 0.01 SM tokens
+
+    if (!userId || !coinsRequested) return res.status(400).json({ error: "Missing data" });
+
+    const user = await User.findOne({ userId });
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    if (coinsRequested > user.coins) return res.status(400).json({ error: "Not enough coins" });
+
+    const tokenAmount = coinsRequested * conversionRate;
+
+    const request = new TokenRequest({
+        userId,
+        username,
+        coinsRequested,
+        tokenAmount
+    });
+
+    await request.save();
+    res.json({ success: true, message: "Token conversion request submitted." });
+});
+// 📌 API: Approve Token Conversion (Admin Only)
+app.post("/approve-token-conversion", async (req, res) => {
+    const { requestId, adminPassword } = req.body;
+
+    if (adminPassword !== process.env.ADMIN_PASS) return res.status(403).json({ error: "Unauthorized" });
+
+    const request = await TokenRequest.findById(requestId);
+    if (!request) return res.status(404).json({ error: "Request not found" });
+
+    if (request.status !== "Pending") return res.status(400).json({ error: "Already processed" });
+
+    const user = await User.findOne({ userId: request.userId });
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    if (user.coins < request.coinsRequested) return res.status(400).json({ error: "Insufficient coins" });
+
+    user.coins -= request.coinsRequested;
+    await user.save();
+
+    request.status = "Approved";
+    await request.save();
+
+    res.json({ success: true, message: `Approved! Send ${request.tokenAmount} SM tokens to ${user.username}.` });
+});
+// 📌 API: Check Token Request Status
+app.get("/check-token-status", async (req, res) => {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: "Missing userId" });
+
+    const requests = await TokenRequest.find({ userId }).sort({ requestDate: -1 });
+    res.json(requests);
+});
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -1,14 +1,15 @@
 require('dotenv').config();
 const { Telegraf } = require('telegraf');
 const mongoose = require('mongoose');
+const axios = require('axios');
 const cron = require('node-cron');
 
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
-// Connect to MongoDB
+// 📌 Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
 
-// User Schema
+// 📌 Define User Schema
 const UserSchema = new mongoose.Schema({
     userId: String,
     username: String,
@@ -61,5 +62,37 @@ cron.schedule('0 0 1 * *', async () => {
     await User.updateMany({}, { coins: 0, coinsToday: 0 });
 });
 
-// 📌 Start Bot
+// 📌 Handle /convert Command (Token Conversion)
+bot.command("convert", async (ctx) => {
+    const userId = ctx.from.id;
+    const username = ctx.from.username || "Unknown";
+    
+    try {
+        const user = await axios.get(`https://your-server-url.com/get-scores?userId=${userId}`);
+        if (user.data.coins < 100) {
+            return ctx.reply("❌ You need at least 100 coins to convert!");
+        }
+
+        ctx.reply("💰 How many coins do you want to convert? Reply with a number.");
+        
+        bot.hears(/^\d+$/, async (ctx) => {
+            const coinsRequested = parseInt(ctx.message.text);
+            if (coinsRequested < 100) {
+                return ctx.reply("❌ Minimum conversion amount is 100 coins.");
+            }
+
+            const response = await axios.post("https://your-server-url.com/request-token-conversion", {
+                userId,
+                username,
+                coinsRequested
+            });
+
+            ctx.reply(response.data.message);
+        });
+    } catch (error) {
+        ctx.reply("❌ Error processing your request. Please try again later.");
+    }
+});
+
+// 📌 Start Bot (Move to End)
 bot.launch();
