@@ -56,13 +56,14 @@ function updateScoreUI() {
 // 📌 Spaceship Data
 const spaceship = { x: 175, y: 500, width: 50, height: 50, speed: 6 };
 
-// 📌 Update Coins with Daily Cap
+// 📌 Update Coins with Daily Limit (100), But Keep High Score Unlimited
 function updateCoins(coins) {
     if (dailyScore < 100) {
-        coinsEarned += coins;
-        dailyScore += coins;
-        if (dailyScore > 100) dailyScore = 100; // Enforce daily limit
+        let coinsToAdd = Math.min(coins, 100 - dailyScore); // Ensures daily cap stays at 100
+        dailyScore += coinsToAdd;
+        coinsEarned += coins; // Current score should keep increasing
 
+        // Update High Score if the player sets a new record
         if (coinsEarned > highScore) {
             highScore = coinsEarned;
             document.getElementById("highScore").innerText = highScore;
@@ -70,11 +71,11 @@ function updateCoins(coins) {
 
         updateScoreUI();
 
-        // Save to backend
+        // Save daily score to backend, but NOT limit high score
         fetch("https://your-server-url.com/update-score", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId, score: coins })
+            body: JSON.stringify({ userId, score: coinsToAdd })  // Only send allowed daily score
         }).catch((err) => console.log("Error updating score:", err));
     }
 }
