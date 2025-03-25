@@ -10,20 +10,20 @@ let gameOver = false;
 
 // 📌 Load Images
 const spaceshipImg = new Image();
-spaceshipImg.src = "assets/spaceship.png";
+spaceshipImg.src = "./assets/spaceship.png";
 
 const enemyImg = new Image();
-enemyImg.src = "assets/enemy.png";
+enemyImg.src = "./assets/enemy.png";
 
 const bulletImg = new Image();
-bulletImg.src = "assets/bullet.png";
+bulletImg.src = "./assets/bullet.png";
 
 const backgroundImg = new Image();
-backgroundImg.src = "assets/background.jpg";
+backgroundImg.src = "./assets/background.jpg";
 
 // 📌 Load Sounds
-const gameMusic = new Audio("assets/game-music.mp3");
-const explosionSound = new Audio("assets/explosion.mp3");
+const gameMusic = new Audio("./assets/game-music.mp3");
+const explosionSound = new Audio("./assets/explosion.mp3");
 
 // 📌 Start Background Music (On First Click)
 document.addEventListener("click", () => {
@@ -32,22 +32,26 @@ document.addEventListener("click", () => {
 });
 
 // 📌 Spaceship Data
-const spaceship = { x: 175, y: 500, width: 50, height: 50, speed: 5 };
+const spaceship = { x: 175, y: 500, width: 50, height: 50, speed: 6 };
 
 // 📌 Update Coins
 function updateCoins(coins) {
+    coinsEarned += coins;  // Increase local coin count
+    document.getElementById("coinCount").innerText = coinsEarned; // Update UI
+
+    // Send coin update to the bot
     fetch("https://your-bot-render-url.com/update-coins", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, coins }),
+        body: JSON.stringify({ userId, coins })
     })
-        .then((res) => res.json())
-        .then((data) => {
-            if (data.success) {
-                coinsEarned += data.coinsAdded;
-                document.getElementById("coinCount").innerText = coinsEarned;
-            }
-        });
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            console.log("Coins updated on server");
+        }
+    })
+    .catch(err => console.log("Error updating coins:", err));
 }
 
 // 📌 Get Leaderboard
@@ -120,7 +124,7 @@ function update() {
                 enemies.splice(eIndex, 1);
                 bullets.splice(bIndex, 1);
                 explosionSound.play();
-                updateCoins(5);
+                updateCoins(5);  // 📌 Increase coins when enemy is destroyed
             }
         });
     });
@@ -131,6 +135,11 @@ function update() {
 // 📌 Player Controls (Smoother Movement)
 let moveLeft = false;
 let moveRight = false;
+
+document.getElementById("leftBtn").addEventListener("mousedown", () => (moveLeft = true));
+document.getElementById("leftBtn").addEventListener("mouseup", () => (moveLeft = false));
+document.getElementById("rightBtn").addEventListener("mousedown", () => (moveRight = true));
+document.getElementById("rightBtn").addEventListener("mouseup", () => (moveRight = false));
 
 document.getElementById("leftBtn").addEventListener("touchstart", () => (moveLeft = true));
 document.getElementById("leftBtn").addEventListener("touchend", () => (moveLeft = false));
