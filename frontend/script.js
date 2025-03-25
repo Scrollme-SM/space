@@ -23,6 +23,10 @@ bulletImg.src = "./assets/bullet.png";
 const backgroundImg = new Image();
 backgroundImg.src = "./assets/background.jpg";
 
+// 📌 Preload Explosion Image
+const explosionImg = new Image();
+explosionImg.src = "./assets/explosion.png";
+
 // 📌 Load Sounds
 const gameMusic = new Audio("./assets/game-music.mp3");
 const explosionSound = new Audio("./assets/explosion.mp3");
@@ -112,22 +116,33 @@ function drawEnemies() {
     });
 }
 
-// 📌 Game Logic
+// 📌 Background Scroll Effect
+let bgY = 0;
+
 function update() {
-    if (gameOver) return; // Stop updating if game over
+    if (gameOver) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
+
+    // 📌 Move Background Downwards for Animation
+    bgY += 2;
+    if (bgY >= canvas.height) {
+        bgY = 0;
+    }
+    ctx.drawImage(backgroundImg, 0, bgY, canvas.width, canvas.height);
+    ctx.drawImage(backgroundImg, 0, bgY - canvas.height, canvas.width, canvas.height);
 
     drawSpaceship();
     drawEnemies();
     drawBullets();
 
+    // 📌 Move bullets
     bullets.forEach((bullet, index) => {
         bullet.y -= 5;
         if (bullet.y < 0) bullets.splice(index, 1);
     });
 
+    // 📌 Move enemies
     enemies.forEach((enemy, index) => {
         enemy.y += 2;
         if (enemy.y > canvas.height) enemies.splice(index, 1);
@@ -141,7 +156,7 @@ function update() {
         ) {
             gameOver = true;
             alert("Game Over! Restarting...");
-            setTimeout(() => location.reload(), 2000); // Restart after 2 seconds
+            setTimeout(() => location.reload(), 2000);
         }
     });
 
@@ -149,10 +164,17 @@ function update() {
     enemies.forEach((enemy, eIndex) => {
         bullets.forEach((bullet, bIndex) => {
             if (Math.abs(bullet.x - enemy.x) < 20 && Math.abs(bullet.y - enemy.y) < 20) {
-                enemies.splice(eIndex, 1);
                 bullets.splice(bIndex, 1);
                 explosionSound.play();
-                updateCoins(5); // 📌 Increase coins when enemy is destroyed
+
+                // 📌 Explosion Animation
+                ctx.drawImage(explosionImg, enemy.x, enemy.y, 50, 50);
+
+                setTimeout(() => {
+                    enemies.splice(eIndex, 1);
+                }, 100); // Delay enemy removal for animation
+
+                updateCoins(5);
             }
         });
     });
@@ -161,41 +183,6 @@ function update() {
 }
 
 // 📌 Player Controls (Smoother Movement)
-let moveLeft = false;
-let moveRight = false;
-
-document.getElementById("leftBtn").addEventListener("mousedown", () => (moveLeft = true));
-document.getElementById("leftBtn").addEventListener("mouseup", () => (moveLeft = false));
-document.getElementById("rightBtn").addEventListener("mousedown", () => (moveRight = true));
-document.getElementById("rightBtn").addEventListener("mouseup", () => (moveRight = false));
-
-document.getElementById("leftBtn").addEventListener("touchstart", () => (moveLeft = true));
-document.getElementById("leftBtn").addEventListener("touchend", () => (moveLeft = false));
-document.getElementById("rightBtn").addEventListener("touchstart", () => (moveRight = true));
-document.getElementById("rightBtn").addEventListener("touchend", () => (moveRight = false));
-
-function movePlayer() {
-    if (moveLeft) spaceship.x = Math.max(0, spaceship.x - spaceship.speed);
-    if (moveRight) spaceship.x = Math.min(canvas.width - spaceship.width, spaceship.x + spaceship.speed);
-    requestAnimationFrame(movePlayer);
-}
-
-movePlayer();
-
-// 📌 Shoot Bullets
-document.getElementById("shootBtn").addEventListener("click", () => {
-    bullets.push({ x: spaceship.x + 22, y: spaceship.y });
-});
-
-// 📌 Spawn Enemies
-setInterval(() => {
-    enemies.push({ x: Math.random() * (canvas.width - 40), y: 0 });
-}, 2000);
-
-update();
-fetchScores();
-fetchLeaderboard();
-
 document.getElementById("convertBtn").addEventListener("click", () => {
     let coinsToConvert = prompt("Enter coins to convert (Min: 100)");
     coinsToConvert = parseInt(coinsToConvert);
@@ -214,3 +201,15 @@ document.getElementById("convertBtn").addEventListener("click", () => {
     .then((data) => alert(data.message))
     .catch((err) => console.error("Error:", err));
 });
+
+// 📌 Button Click Animation
+document.querySelectorAll(".control-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+        btn.classList.add("active");
+        setTimeout(() => btn.classList.remove("active"), 100);
+    });
+});
+
+update();
+fetchScores();
+fetchLeaderboard();
