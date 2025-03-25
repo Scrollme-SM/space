@@ -74,6 +74,7 @@ function updateCoins(coins) {
         body: JSON.stringify({ userId, score: coinsToAdd })
     }).catch((err) => console.log("Error updating score:", err));
 }
+
 // 📌 Draw Functions
 function drawSpaceship() {
     ctx.drawImage(spaceshipImg, spaceship.x, spaceship.y, spaceship.width, spaceship.height);
@@ -116,14 +117,26 @@ function update() {
     enemies.forEach((enemy, index) => {
         enemy.y += 2;
         if (enemy.y > canvas.height) enemies.splice(index, 1);
+
+        // 📌 Check for Game Over (Enemy Collides with Player)
+        if (
+            enemy.x < spaceship.x + spaceship.width &&
+            enemy.x + 40 > spaceship.x &&
+            enemy.y < spaceship.y + spaceship.height &&
+            enemy.y + 40 > spaceship.y
+        ) {
+            gameOver = true;
+            alert("Game Over! Restarting...");
+            setTimeout(() => location.reload(), 2000);
+        }
     });
 
     requestAnimationFrame(update);
 }
 
 // 📌 Controls
-document.getElementById("leftBtn").addEventListener("click", () => spaceship.x = Math.max(0, spaceship.x - spaceship.speed));
-document.getElementById("rightBtn").addEventListener("click", () => spaceship.x = Math.min(canvas.width - spaceship.width, spaceship.x + spaceship.speed));
+document.getElementById("leftBtn").addEventListener("mousedown", () => spaceship.x = Math.max(0, spaceship.x - spaceship.speed));
+document.getElementById("rightBtn").addEventListener("mousedown", () => spaceship.x = Math.min(canvas.width - spaceship.width, spaceship.x + spaceship.speed));
 document.getElementById("shootBtn").addEventListener("click", () => bullets.push({ x: spaceship.x + 22, y: spaceship.y }));
 
 // 📌 Spawn Enemies
