@@ -69,12 +69,6 @@ function updateCoins(coins) {
     
     coinsEarned += coins;
     if (coinsEarned > highScore) highScore = coinsEarned;
-
-    fetch("https://your-server-url.com/update-score", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, score: coinsToAdd })
-    }).catch((err) => console.log("Error updating score:", err));
 }
 
 // 📌 Draw Functions
@@ -130,6 +124,8 @@ function update() {
 
     enemies.forEach((enemy, index) => {
         enemy.y += 2;
+        enemy.x += Math.sin(enemy.y * 0.05) * 2;  // ⬅️ Move enemy left-right in a curve
+
         if (enemy.y > canvas.height) enemies.splice(index, 1);
 
         // 📌 Check for Game Over (Enemy Collides with Player)
@@ -165,14 +161,19 @@ function update() {
     requestAnimationFrame(update);
 }
 
-// 📌 Smooth Movement
+// 📌 Smooth Movement with Key Controls
 let moveLeft = false;
 let moveRight = false;
 
-document.getElementById("leftBtn").addEventListener("mousedown", () => moveLeft = true);
-document.getElementById("leftBtn").addEventListener("mouseup", () => moveLeft = false);
-document.getElementById("rightBtn").addEventListener("mousedown", () => moveRight = true);
-document.getElementById("rightBtn").addEventListener("mouseup", () => moveRight = false);
+document.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowLeft") moveLeft = true;
+    if (event.key === "ArrowRight") moveRight = true;
+});
+
+document.addEventListener("keyup", (event) => {
+    if (event.key === "ArrowLeft") moveLeft = false;
+    if (event.key === "ArrowRight") moveRight = false;
+});
 
 function movePlayer() {
     if (moveLeft) spaceship.x = Math.max(0, spaceship.x - spaceship.speed);
@@ -182,12 +183,23 @@ function movePlayer() {
 
 movePlayer();
 
+// 📌 **Fix for Left/Right Buttons Not Working**
+document.getElementById("leftBtn").addEventListener("mousedown", () => moveLeft = true);
+document.getElementById("leftBtn").addEventListener("mouseup", () => moveLeft = false);
+document.getElementById("leftBtn").addEventListener("touchstart", () => moveLeft = true);
+document.getElementById("leftBtn").addEventListener("touchend", () => moveLeft = false);
+
+document.getElementById("rightBtn").addEventListener("mousedown", () => moveRight = true);
+document.getElementById("rightBtn").addEventListener("mouseup", () => moveRight = false);
+document.getElementById("rightBtn").addEventListener("touchstart", () => moveRight = true);
+document.getElementById("rightBtn").addEventListener("touchend", () => moveRight = false);
+
 // 📌 Shoot Bullets
 document.getElementById("shootBtn").addEventListener("click", () => {
     bullets.push({ x: spaceship.x + 22, y: spaceship.y });
 });
 
-// 📌 Spawn Enemies
+// 📌 Spawn Enemies (Every 2 Sec)
 setInterval(() => {
     enemies.push({ x: Math.random() * (canvas.width - 40), y: 0 });
 }, 2000);
