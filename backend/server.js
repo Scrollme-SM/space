@@ -207,4 +207,19 @@ app.post('/add-user', async (req, res) => {
         res.status(500).json({ error: "Failed to add user" });
     }
 });
+// 📌 Default Route - Show Available API Endpoints
+app.get("/", (req, res) => {
+    res.json({
+        message: "🚀 Welcome to ScrollMe API!",
+        routes: {
+            getScores: "/get-scores?userId=USER_ID",
+            updateScore: "/update-score",
+            leaderboard: "/leaderboard",
+            requestToken: "/request-token-conversion",
+            approveToken: "/approve-token-conversion",
+            checkTokenStatus: "/check-token-status",
+            addUser: "/add-user"
+        }
+    });
+});
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
