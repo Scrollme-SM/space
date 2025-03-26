@@ -225,4 +225,7 @@ app.get("/", (req, res) => {
         }
     });
 });
+app.get('/env-debug', (req, res) => {
+    res.json({ adminPass: process.env.ADMIN_PASS || "Not Found" });
+});
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
