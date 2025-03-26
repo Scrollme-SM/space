@@ -182,5 +182,29 @@ app.get("/check-token-status", async (req, res) => {
     const requests = await TokenRequest.find({ userId }).sort({ requestDate: -1 });
     res.json(requests);
 });
+// 📌 API: Add a New User
+app.post('/add-user', async (req, res) => {
+    const { userId, username, coins, highScore, dailyScore, referrals } = req.body;
 
+    if (!userId || !username) return res.status(400).json({ error: 'Missing userId or username' });
+
+    try {
+        const existingUser = await User.findOne({ userId });
+        if (existingUser) return res.status(400).json({ error: 'User already exists' });
+
+        const newUser = new User({
+            userId,
+            username,
+            coins: coins || 0,
+            highScore: highScore || 0,
+            dailyScore: dailyScore || 0,
+            referrals: referrals || 0
+        });
+
+        await newUser.save();
+        res.json({ success: true, message: "User added successfully", user: newUser });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to add user" });
+    }
+});
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
