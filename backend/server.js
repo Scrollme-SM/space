@@ -202,9 +202,12 @@ app.post('/add-user', async (req, res) => {
         });
 
         await newUser.save();
+        console.log("✅ New User Added:", newUser); // ✅ Debugging Log
         res.json({ success: true, message: "User added successfully", user: newUser });
+
     } catch (error) {
-        res.status(500).json({ error: "Failed to add user" });
+        console.error("❌ Error adding user:", error.message); // ✅ Debugging Log
+        res.status(500).json({ error: "Failed to add user", details: error.message });
     }
 });
 // 📌 Default Route - Show Available API Endpoints
