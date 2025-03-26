@@ -1,5 +1,6 @@
+require('dotenv').config(); // Load environment variables first
+
 const PORT = process.env.PORT || 3000;
-require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const axios = require('axios');
@@ -9,15 +10,14 @@ const app = express();
 app.use(express.json());
 
 // 📌 Connect to MongoDB with detailed error logging
-mongoose.connect(process.env.MONGO_URI, { 
-    useNewUrlParser: true, 
-    useUnifiedTopology: true 
-})
-.then(() => console.log('✅ MongoDB Connected Successfully!'))
-.catch(err => {
-    console.error('❌ MongoDB Connection Failed:', err.message);
-    process.exit(1); // Exit process on DB failure
-});
+console.log("Connecting to MongoDB:", process.env.MONGO_URI);
+
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then(() => console.log('✅ MongoDB Connected Successfully!'))
+    .catch(err => {
+        console.error('❌ MongoDB Connection Failed:', err.message);
+        process.exit(1); // Exit process on DB failure
+    });
 
 // 📌 Define User Schema
 const UserSchema = new mongoose.Schema({
@@ -43,7 +43,7 @@ const TokenRequestSchema = new mongoose.Schema({
 });
 const TokenRequest = mongoose.model("TokenRequest", TokenRequestSchema);
 
-// 📌 API: Fetch High Score & Daily Score
+// 📌 API: Fetch User Scores
 app.get('/get-scores', async (req, res) => {
     const { userId } = req.query;
     if (!userId) return res.status(400).json({ error: 'Missing userId' });
@@ -103,23 +103,20 @@ async function postLeaderboard() {
     });
 
     await axios.post(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {
-        chat_id: "@YourTelegramGroup",
+        chat_id: process.env.TELEGRAM_CHAT_ID, // Secure chat ID
         text: message,
         parse_mode: "Markdown"
     });
 
-    console.log("Leaderboard posted in Telegram group");
+    console.log("✅ Leaderboard posted in Telegram group");
 }
 
 // 📌 Cron Job to Reset Leaderboard Monthly
 cron.schedule("0 0 1 * *", async () => {
-    console.log("Resetting leaderboard for new month...");
-
+    console.log("🔄 Resetting leaderboard for new month...");
     await postLeaderboard();
-
     await User.updateMany({}, { $set: { dailyScore: 0 } });
-
-    console.log("Leaderboard reset for the new month.");
+    console.log("✅ Leaderboard reset for the new month.");
 });
 
 // 📌 API: Manually Reset Leaderboard
@@ -136,7 +133,7 @@ app.post('/reset-leaderboard', async (req, res) => {
 // 📌 API: Request Token Conversion
 app.post("/request-token-conversion", async (req, res) => {
     const { userId, username, coinsRequested } = req.body;
-    const conversionRate = 0.01; // Example: 1 coin = 0.01 SM tokens
+    const conversionRate = 0.01; // 1 coin = 0.01 SM tokens
 
     if (!userId || !coinsRequested) return res.status(400).json({ error: "Missing data" });
 
@@ -147,20 +144,15 @@ app.post("/request-token-conversion", async (req, res) => {
 
     const tokenAmount = coinsRequested * conversionRate;
 
-    const request = new TokenRequest({
-        userId,
-        username,
-        coinsRequested,
-        tokenAmount
-    });
-
+    const request = new TokenRequest({ userId, username, coinsRequested, tokenAmount });
     await request.save();
+
     res.json({ success: true, message: "Token conversion request submitted." });
 });
+
 // 📌 API: Approve Token Conversion (Admin Only)
 app.post("/approve-token-conversion", async (req, res) => {
     const { requestId, adminPassword } = req.body;
-
     if (adminPassword !== process.env.ADMIN_PASS) return res.status(403).json({ error: "Unauthorized" });
 
     const request = await TokenRequest.findById(requestId);
@@ -179,8 +171,9 @@ app.post("/approve-token-conversion", async (req, res) => {
     request.status = "Approved";
     await request.save();
 
-    res.json({ success: true, message: `Approved! Send ${request.tokenAmount} SM tokens to ${user.username}.` });
+    res.json({ success: true, message: `✅ Approved! Send ${request.tokenAmount} SM tokens to ${user.username}.` });
 });
+
 // 📌 API: Check Token Request Status
 app.get("/check-token-status", async (req, res) => {
     const { userId } = req.query;
@@ -189,4 +182,5 @@ app.get("/check-token-status", async (req, res) => {
     const requests = await TokenRequest.find({ userId }).sort({ requestDate: -1 });
     res.json(requests);
 });
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
