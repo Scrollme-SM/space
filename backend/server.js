@@ -8,15 +8,21 @@ const cron = require('node-cron');
 const app = express();
 app.use(express.json());
 
-// 📌 Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('MongoDB Connected'))
-    .catch(err => console.error(err));
+// 📌 Connect to MongoDB with detailed error logging
+mongoose.connect(process.env.MONGO_URI, { 
+    useNewUrlParser: true, 
+    useUnifiedTopology: true 
+})
+.then(() => console.log('✅ MongoDB Connected Successfully!'))
+.catch(err => {
+    console.error('❌ MongoDB Connection Failed:', err.message);
+    process.exit(1); // Exit process on DB failure
+});
 
 // 📌 Define User Schema
 const UserSchema = new mongoose.Schema({
-    userId: String,
-    username: String,
+    userId: { type: String, required: true, unique: true },
+    username: { type: String, required: true },
     coins: { type: Number, default: 0 },
     highScore: { type: Number, default: 0 },
     dailyScore: { type: Number, default: 0 },
