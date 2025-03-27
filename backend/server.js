@@ -2,17 +2,21 @@ require('dotenv').config(); // Load environment variables
 
 const express = require('express');
 const connectDB = require('./scrollme-api/config/db');
+const cors = require('cors');
 
 // Import routes
-const userRoutes = require('./routes/userRoutes');
-const leaderboardRoutes = require('./routes/leaderboardRoutes');
-const tokenRoutes = require('./routes/tokenRoutes');
+const userRoutes = require('./scrollme-api/routes/userRoutes');
+const leaderboardRoutes = require('./scrollme-api/routes/leaderboardRoutes');
+const tokenRoutes = require('./scrollme-api/routes/tokenRoutes');
 
 // Import cron jobs (ensures scheduled tasks start when server runs)
-require('./utils/cronJobs');
+require('./scrollme-api/utils/cronJobs');
 
 const app = express();
+
+// Middleware
 app.use(express.json());
+app.use(cors());
 
 // Connect to MongoDB
 connectDB();
