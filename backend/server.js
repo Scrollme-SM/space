@@ -1,7 +1,7 @@
 require('dotenv').config(); // Load environment variables
 
 const express = require('express');
-const connectDB = require('./config/db');
+const connectDB = require('./scrollme-api/config/db');
 
 // Import routes
 const userRoutes = require('./routes/userRoutes');
