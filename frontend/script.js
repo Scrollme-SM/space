@@ -1,6 +1,8 @@
+// 🚀 **User Authentication**
 const userId = localStorage.getItem("userId") || prompt("Enter Telegram ID:");
 localStorage.setItem("userId", userId);
 
+// 🚀 **Game Setup**
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
@@ -18,7 +20,7 @@ const shieldImg = new Image(); shieldImg.src = "./assets/shield.png";
 const doubleBulletsImg = new Image(); doubleBulletsImg.src = "./assets/double-bullets.png";
 const speedBoostImg = new Image(); speedBoostImg.src = "./assets/speed-boost.png";
 
-// 🎵 **Load Sounds**
+// 🚀 **Load Sounds**
 const gameMusic = new Audio("./assets/game-music.mp3");
 const explosionSound = new Audio("./assets/explosion.mp3");
 const powerUpSound = new Audio("./assets/powerup.mp3");
