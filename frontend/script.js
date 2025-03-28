@@ -70,7 +70,7 @@ const spaceship = {
     y: 500, 
     width: 50, 
     height: 50, 
-    speed: 6, 
+    speed: 8, // Increased speed for faster response
     shield: false, 
     doubleBullets: false,
     speedBoost: false 
@@ -86,57 +86,80 @@ function shoot() {
     }
 }
 
-// 🚀 Joystick Controls
-const joystick = document.getElementById("joystick");
-const joystickKnob = document.getElementById("joystickKnob");
-let joystickActive = false;
-let joystickX = 0;
+// 🚀 Control Buttons Inside Canvas
+const leftButton = { x: 20, y: 520, width: 60, height: 60 };
+const rightButton = { x: 100, y: 520, width: 60, height: 60 };
+const shootButton = { x: 320, y: 520, width: 60, height: 60 };
 
-joystickKnob.addEventListener("mousedown", startJoystick);
-joystickKnob.addEventListener("touchstart", startJoystick);
+let moveLeft = false, moveRight = false;
 
-document.addEventListener("mousemove", moveJoystick);
-document.addEventListener("touchmove", moveJoystick);
+function drawControls() {
+    // Left Arrow Button
+    ctx.fillStyle = moveLeft ? "#00e5ff" : "#0ff";
+    ctx.beginPath();
+    ctx.arc(leftButton.x + leftButton.width / 2, leftButton.y + leftButton.height / 2, 30, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "black";
+    ctx.font = "30px Arial";
+    ctx.fillText("←", leftButton.x + 20, leftButton.y + 40);
 
-document.addEventListener("mouseup", stopJoystick);
-document.addEventListener("touchend", stopJoystick);
+    // Right Arrow Button
+    ctx.fillStyle = moveRight ? "#00e5ff" : "#0ff";
+    ctx.beginPath();
+    ctx.arc(rightButton.x + rightButton.width / 2, rightButton.y + rightButton.height / 2, 30, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "black";
+    ctx.font = "30px Arial";
+    ctx.fillText("→", rightButton.x + 20, rightButton.y + 40);
 
-function startJoystick(e) {
-    joystickActive = true;
-    moveJoystick(e);
+    // Shoot Button
+    ctx.fillStyle = "#ff4444";
+    ctx.beginPath();
+    ctx.arc(shootButton.x + shootButton.width / 2, shootButton.y + shootButton.height / 2, 30, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "white";
+    ctx.font = "30px Arial";
+    ctx.fillText("🔫", shootButton.x + 15, shootButton.y + 40);
 }
 
-function moveJoystick(e) {
-    if (!joystickActive) return;
+// 🚀 Touch and Mouse Controls
+canvas.addEventListener("mousedown", handleInput);
+canvas.addEventListener("touchstart", handleInput);
+canvas.addEventListener("mouseup", stopInput);
+canvas.addEventListener("touchend", stopInput);
 
-    const rect = joystick.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    let deltaX = clientX - centerX;
+function handleInput(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
 
-    // Limit knob movement within joystick circle
-    const maxDelta = rect.width / 2 - joystickKnob.offsetWidth / 2;
-    deltaX = Math.max(-maxDelta, Math.min(maxDelta, deltaX));
-
-    joystickKnob.style.left = `${50 + (deltaX / maxDelta) * 50}%`;
-    joystickX = deltaX / maxDelta; // Normalized value between -1 and 1
+    if (isPointInCircle(x, y, leftButton)) moveLeft = true;
+    if (isPointInCircle(x, y, rightButton)) moveRight = true;
+    if (isPointInCircle(x, y, shootButton)) shoot();
 }
 
-function stopJoystick() {
-    joystickActive = false;
-    joystickKnob.style.left = "50%";
-    joystickX = 0;
+function stopInput() {
+    moveLeft = false;
+    moveRight = false;
+}
+
+function isPointInCircle(x, y, button) {
+    const centerX = button.x + button.width / 2;
+    const centerY = button.y + button.height / 2;
+    const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+    return distance <= 30; // Radius of the button
 }
 
 // 🚀 Keyboard Controls (Optional)
 document.addEventListener("keydown", (event) => {
-    if (event.key === "ArrowLeft") joystickX = -1;
-    if (event.key === "ArrowRight") joystickX = 1;
+    if (event.key === "ArrowLeft") moveLeft = true;
+    if (event.key === "ArrowRight") moveRight = true;
     if (event.key === " ") shoot();
 });
 
 document.addEventListener("keyup", (event) => {
-    if (event.key === "ArrowLeft" || event.key === "ArrowRight") joystickX = 0;
+    if (event.key === "ArrowLeft") moveLeft = false;
+    if (event.key === "ArrowRight") moveRight = false;
 });
 
 // 🚀 Enemy AI - Move Down
@@ -219,10 +242,11 @@ function update() {
     drawEnemies();
     drawBullets();
     drawPowerUps();
+    drawControls();
 
-    // Update Spaceship Movement with Joystick
-    spaceship.x += joystickX * spaceship.speed;
-    spaceship.x = Math.max(0, Math.min(canvas.width - spaceship.width, spaceship.x));
+    // Update Spaceship Movement
+    if (moveLeft) spaceship.x = Math.max(0, spaceship.x - spaceship.speed);
+    if (moveRight) spaceship.x = Math.min(canvas.width - spaceship.width, spaceship.x + spaceship.speed);
 
     // Update Bullets
     bullets.forEach((bullet, index) => {
@@ -263,10 +287,10 @@ function update() {
                 setTimeout(() => spaceship.doubleBullets = false, 10000);
             } else if (p.type === "speedBoost") {
                 spaceship.speedBoost = true;
-                spaceship.speed = 10;
+                spaceship.speed = 12; // Faster with boost
                 setTimeout(() => {
                     spaceship.speedBoost = false;
-                    spaceship.speed = 6;
+                    spaceship.speed = 8;
                 }, 10000);
             }
             powerUps.splice(pIndex, 1);
@@ -288,12 +312,9 @@ function resetGame() {
     spaceship.shield = false;
     spaceship.doubleBullets = false;
     spaceship.speedBoost = false;
-    spaceship.speed = 6;
+    spaceship.speed = 8;
     update();
 }
-
-// 🚀 Circular Shoot Button
-document.getElementById("shootButton").addEventListener("click", shoot);
 
 // 🚀 Spawn Enemies
 setInterval(() => {

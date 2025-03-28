@@ -35,59 +35,6 @@ canvas {
     box-shadow: 0 0 10px white;
 }
 
-/* 📌 Joystick Styles */
-.joystick {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    width: 100px;
-    height: 100px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    border: 2px solid cyan;
-    box-shadow: 0 0 10px cyan;
-}
-
-.joystick-knob {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    background: #0ff;
-    border-radius: 50%;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 10px #00e5ff;
-    cursor: pointer;
-}
-
-/* 📌 Circular Shoot Button */
-.shoot-button {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 80px;
-    height: 80px;
-    font-size: 30px;
-    background: #ff4444;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 0 10px #ff4444;
-    transition: transform 0.1s ease-in-out, box-shadow 0.3s ease-in-out;
-    z-index: 1000;
-}
-
-.shoot-button:hover {
-    background: #ff6666;
-    box-shadow: 0 0 15px #ff6666;
-}
-
-.shoot-button:active {
-    transform: scale(0.9);
-}
-
 /* 📌 Convert Button */
 #convertBtn {
     background: #FF9800;
