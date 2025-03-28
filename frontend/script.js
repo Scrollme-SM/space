@@ -1,6 +1,8 @@
+// 🚀 Initialize User
 const userId = localStorage.getItem("userId") || prompt("Enter Telegram ID:");
 localStorage.setItem("userId", userId);
 
+// 🚀 Canvas Setup
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
@@ -170,7 +172,7 @@ function isCollision(obj1, obj2) {
            obj1.y < obj2.y + obj2.height &&
            obj1.y + obj1.height > obj2.y;
 }
-
+document.getElementById("shootButton").addEventListener("click", shoot);
 // 🚀 **Spawn Enemies**
 setInterval(() => {
     enemies.push({ x: Math.random() * (canvas.width - 40), y: 0, width: 40, height: 40, speed: Math.random() * 2 + 1 });
