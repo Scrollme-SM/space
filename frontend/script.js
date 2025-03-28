@@ -55,7 +55,7 @@ backgrounds[2].img.src = "./assets/background3.jpg";
 
 function updateBackground() {
     backgrounds.forEach(bg => {
-        bg.y += 1; // Reduced speed from 2 to 1 for smoother scrolling
+        bg.y += 1;
         if (bg.y >= canvas.height) bg.y = -canvas.height * 2;
     });
 }
@@ -86,30 +86,57 @@ function shoot() {
     }
 }
 
-// 🚀 Player Controls
-let moveLeft = false, moveRight = false;
+// 🚀 Joystick Controls
+const joystick = document.getElementById("joystick");
+const joystickKnob = document.getElementById("joystickKnob");
+let joystickActive = false;
+let joystickX = 0;
 
+joystickKnob.addEventListener("mousedown", startJoystick);
+joystickKnob.addEventListener("touchstart", startJoystick);
+
+document.addEventListener("mousemove", moveJoystick);
+document.addEventListener("touchmove", moveJoystick);
+
+document.addEventListener("mouseup", stopJoystick);
+document.addEventListener("touchend", stopJoystick);
+
+function startJoystick(e) {
+    joystickActive = true;
+    moveJoystick(e);
+}
+
+function moveJoystick(e) {
+    if (!joystickActive) return;
+
+    const rect = joystick.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    let deltaX = clientX - centerX;
+
+    // Limit knob movement within joystick circle
+    const maxDelta = rect.width / 2 - joystickKnob.offsetWidth / 2;
+    deltaX = Math.max(-maxDelta, Math.min(maxDelta, deltaX));
+
+    joystickKnob.style.left = `${50 + (deltaX / maxDelta) * 50}%`;
+    joystickX = deltaX / maxDelta; // Normalized value between -1 and 1
+}
+
+function stopJoystick() {
+    joystickActive = false;
+    joystickKnob.style.left = "50%";
+    joystickX = 0;
+}
+
+// 🚀 Keyboard Controls (Optional)
 document.addEventListener("keydown", (event) => {
-    if (event.key === "ArrowLeft") moveLeft = true;
-    if (event.key === "ArrowRight") moveRight = true;
+    if (event.key === "ArrowLeft") joystickX = -1;
+    if (event.key === "ArrowRight") joystickX = 1;
     if (event.key === " ") shoot();
 });
 
 document.addEventListener("keyup", (event) => {
-    if (event.key === "ArrowLeft") moveLeft = false;
-    if (event.key === "ArrowRight") moveRight = false;
-});
-
-// 🚀 Touch Controls for Mobile
-canvas.addEventListener("touchstart", (e) => {
-    const touchX = e.touches[0].clientX;
-    if (touchX < canvas.width / 2) moveLeft = true;
-    else moveRight = true;
-});
-
-canvas.addEventListener("touchend", () => {
-    moveLeft = false;
-    moveRight = false;
+    if (event.key === "ArrowLeft" || event.key === "ArrowRight") joystickX = 0;
 });
 
 // 🚀 Enemy AI - Move Down
@@ -134,7 +161,7 @@ function spawnPowerUp() {
     });
 }
 
-setInterval(spawnPowerUp, 10000); // Spawns every 10 seconds
+setInterval(spawnPowerUp, 10000);
 
 // 🚀 Draw Functions
 function drawScores() {
@@ -193,6 +220,10 @@ function update() {
     drawBullets();
     drawPowerUps();
 
+    // Update Spaceship Movement with Joystick
+    spaceship.x += joystickX * spaceship.speed;
+    spaceship.x = Math.max(0, Math.min(canvas.width - spaceship.width, spaceship.x));
+
     // Update Bullets
     bullets.forEach((bullet, index) => {
         if (bullet.y < 0) bullets.splice(index, 1);
@@ -229,14 +260,14 @@ function update() {
             if (p.type === "shield") spaceship.shield = true;
             else if (p.type === "doubleBullets") {
                 spaceship.doubleBullets = true;
-                setTimeout(() => spaceship.doubleBullets = false, 10000); // 10 sec duration
+                setTimeout(() => spaceship.doubleBullets = false, 10000);
             } else if (p.type === "speedBoost") {
                 spaceship.speedBoost = true;
                 spaceship.speed = 10;
                 setTimeout(() => {
                     spaceship.speedBoost = false;
                     spaceship.speed = 6;
-                }, 10000); // 10 sec duration
+                }, 10000);
             }
             powerUps.splice(pIndex, 1);
         }
@@ -245,15 +276,6 @@ function update() {
 
     requestAnimationFrame(update);
 }
-
-// 🚀 Player Movement
-function movePlayer() {
-    if (moveLeft) spaceship.x = Math.max(0, spaceship.x - spaceship.speed);
-    if (moveRight) spaceship.x = Math.min(canvas.width - spaceship.width, spaceship.x + spaceship.speed);
-    requestAnimationFrame(movePlayer);
-}
-
-movePlayer();
 
 // 🚀 Reset Game
 function resetGame() {
@@ -270,7 +292,7 @@ function resetGame() {
     update();
 }
 
-// 🚀 Floating Shoot Button
+// 🚀 Circular Shoot Button
 document.getElementById("shootButton").addEventListener("click", shoot);
 
 // 🚀 Spawn Enemies
