@@ -38,7 +38,9 @@ app.get("/", (req, res) => {
         }
     });
 });
-
+app.get('/api/status', (req, res) => {
+    res.json({ message: '✅ API is running smoothly!', uptime: process.uptime() });
+});
 // Start the Server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
