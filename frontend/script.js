@@ -98,7 +98,7 @@ function drawExplosions() {
     });
 }
 
-// 📌 Pixel-Based Collision Detection
+// 📌 Pixel-Perfect Collision Detection (Restored)
 function isPixelCollision(rect1, rect2) {
     return (
         rect1.x < rect2.x + rect2.width &&
@@ -134,11 +134,10 @@ function update() {
 
     enemies.forEach((enemy, eIndex) => {
         enemy.y += 2;
-        enemy.x += Math.sin(enemy.y * 0.05) * 2;  // ⬅️ Move enemy left-right in a curve
+        enemy.x += Math.sin(enemy.y * 0.05) * 2;
 
         if (enemy.y > canvas.height) enemies.splice(eIndex, 1);
 
-        // 📌 Check for Game Over (Enemy Collides with Player)
         if (isPixelCollision(enemy, spaceship)) {
             gameOver = true;
             alert("Game Over! Restarting...");
@@ -146,16 +145,15 @@ function update() {
         }
     });
 
-    // 📌 FIXED: Bullet & Enemy Collision Detection (Enemies Now Destroy Properly)
     for (let i = enemies.length - 1; i >= 0; i--) {
         for (let j = bullets.length - 1; j >= 0; j--) {
             if (isPixelCollision(enemies[i], bullets[j])) {
-                bullets.splice(j, 1);  // Remove bullet
-                explosions.push({ x: enemies[i].x, y: enemies[i].y });  // Show explosion
-                enemies.splice(i, 1);  // Remove enemy
+                bullets.splice(j, 1);
+                explosions.push({ x: enemies[i].x, y: enemies[i].y });
+                enemies.splice(i, 1);
                 explosionSound.play();
                 updateCoins(5);
-                break; // Ensure only one bullet destroys an enemy
+                break;
             }
         }
     }
@@ -185,16 +183,11 @@ function movePlayer() {
 
 movePlayer();
 
-// 📌 **Fix for Left/Right Buttons Not Working**
-document.getElementById("leftBtn").addEventListener("mousedown", () => moveLeft = true);
-document.getElementById("leftBtn").addEventListener("mouseup", () => moveLeft = false);
-document.getElementById("leftBtn").addEventListener("touchstart", () => moveLeft = true);
-document.getElementById("leftBtn").addEventListener("touchend", () => moveLeft = false);
-
-document.getElementById("rightBtn").addEventListener("mousedown", () => moveRight = true);
-document.getElementById("rightBtn").addEventListener("mouseup", () => moveRight = false);
-document.getElementById("rightBtn").addEventListener("touchstart", () => moveRight = true);
-document.getElementById("rightBtn").addEventListener("touchend", () => moveRight = false);
+// 📌 Cut, Copy, Paste, and Select Buttons (Restored)
+document.getElementById("cutBtn").addEventListener("click", () => document.execCommand("cut"));
+document.getElementById("copyBtn").addEventListener("click", () => document.execCommand("copy"));
+document.getElementById("pasteBtn").addEventListener("click", () => document.execCommand("paste"));
+document.getElementById("selectBtn").addEventListener("click", () => document.execCommand("selectAll"));
 
 // 📌 Shoot Bullets
 document.getElementById("shootBtn").addEventListener("click", () => {
@@ -209,6 +202,7 @@ setInterval(() => {
 update();
 fetchScores();
 
+// 📌 Convert Coins to SM Tokens
 document.getElementById("convertBtn").addEventListener("click", async () => {
     let coinsToConvert = prompt("Enter coins to convert (Min: 100)");
     coinsToConvert = parseInt(coinsToConvert);
