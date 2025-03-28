@@ -3,20 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Space Runner</title>
+    <title>ScrollMe SpaceRunner</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <canvas id="gameCanvas" width="400" height="600"></canvas>
 
-    <div id="controls">
-        <button id="leftBtn" class="control-btn">Left</button>
-        <button id="rightBtn" class="control-btn">Right</button>
-        <button id="shootBtn" class="control-btn">Shoot</button>
+    <!-- Game Controls -->
+    <div id="controls" aria-label="Game Controls">
+        <button id="leftBtn" class="control-btn" aria-label="Move Left">Left</button>
+        <button id="rightBtn" class="control-btn" aria-label="Move Right">Right</button>
+        <button id="shootBtn" class="control-btn" aria-label="Shoot">Shoot</button>
     </div>
 
-    <button id="convertBtn" class="convert-btn">Convert Coins to Tokens</button>
+    <!-- Convert Coins Section -->
+    <button id="convertBtn" class="convert-btn" aria-label="Convert Coins to SM Tokens">
+        Convert Coins to Tokens
+    </button>
 
+    <!-- Game Script -->
     <script src="script.js"></script>
 </body>
 </html>

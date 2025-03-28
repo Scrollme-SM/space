@@ -4,6 +4,26 @@ body {
     background-color: black;
     color: white;
     font-family: Arial, sans-serif;
+    overflow: hidden;
+    position: relative;
+}
+
+/* 📌 Moving Starfield Background */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('stars.png'); /* Replace with your star image */
+    animation: starfield 10s linear infinite;
+    opacity: 0.7;
+}
+
+@keyframes starfield {
+    from { transform: translateY(0); }
+    to { transform: translateY(-100%); }
 }
 
 /* 📌 Game Canvas */
@@ -11,6 +31,7 @@ canvas {
     border: 2px solid white;
     display: block;
     margin: auto;
+    box-shadow: 0 0 10px white; /* Space glow effect */
 }
 
 /* 📌 Controls */
@@ -21,30 +42,44 @@ canvas {
     margin-top: 10px;
 }
 
+/* 📌 Sci-Fi Themed Control Buttons */
 .control-btn {
-    background: #4CAF50;
-    color: white;
-    border: none;
-    padding: 12px;
+    background: #0ff;
+    color: black;
     font-size: 16px;
+    padding: 12px;
+    border: none;
     border-radius: 5px;
     cursor: pointer;
     width: 90px;
-    transition: transform 0.1s ease-in-out;
+    text-shadow: 0 0 5px cyan;
+    box-shadow: 0 0 10px cyan;
+    transition: transform 0.1s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.control-btn:hover {
+    background: #00e5ff;
+    box-shadow: 0 0 15px #00e5ff;
 }
 
 .control-btn:active {
     transform: scale(0.9);
 }
 
-/* 📌 Convert Button (Moved Lower) */
+/* 📌 Convert Button (Moved Lower with Glow) */
 #convertBtn {
     background: #FF9800;
     color: white;
-    border: none;
     padding: 12px;
     margin-top: 40px;
     font-size: 16px;
+    border: none;
     border-radius: 5px;
     cursor: pointer;
+    box-shadow: 0 0 10px #FF9800;
+    transition: box-shadow 0.3s ease-in-out;
+}
+
+#convertBtn:hover {
+    box-shadow: 0 0 15px #FFA726;
 }

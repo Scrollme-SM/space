@@ -6,39 +6,30 @@ const ctx = canvas.getContext("2d");
 
 const bullets = [];
 const enemies = [];
-const explosions = [];
-let coinsEarned = 0;
-let dailyScore = 0;
-let highScore = 0;
-let gameOver = false;
+const powerUps = [];
+let coinsEarned = 0, dailyScore = 0, highScore = 0, gameOver = false;
 
-// 📌 Load Images
-const spaceshipImg = new Image();
-spaceshipImg.src = "./assets/spaceship.png";
+// 🚀 **Load Images**
+const spaceshipImg = new Image(); spaceshipImg.src = "./assets/spaceship.png";
+const enemyImg = new Image(); enemyImg.src = "./assets/enemy.png";
+const bulletImg = new Image(); bulletImg.src = "./assets/bullet.png";
+const explosionImg = new Image(); explosionImg.src = "./assets/explosion.png";
+const shieldImg = new Image(); shieldImg.src = "./assets/shield.png";
+const doubleBulletsImg = new Image(); doubleBulletsImg.src = "./assets/double-bullets.png";
+const speedBoostImg = new Image(); speedBoostImg.src = "./assets/speed-boost.png";
 
-const enemyImg = new Image();
-enemyImg.src = "./assets/enemy.png";
-
-const bulletImg = new Image();
-bulletImg.src = "./assets/bullet.png";
-
-const backgroundImg = new Image();
-backgroundImg.src = "./assets/background.jpg";
-
-const explosionImg = new Image();
-explosionImg.src = "./assets/explosion.png";
-
-// 📌 Load Sounds
+// 🎵 **Load Sounds**
 const gameMusic = new Audio("./assets/game-music.mp3");
 const explosionSound = new Audio("./assets/explosion.mp3");
+const powerUpSound = new Audio("./assets/powerup.mp3");
 
-// 📌 Start Background Music (On First Click)
+// 📌 **Start Background Music**
 document.addEventListener("click", () => {
     gameMusic.loop = true;
     gameMusic.play().catch(() => console.log("Autoplay blocked."));
 });
 
-// 📌 Fetch Scores from Backend
+// 📌 **Fetch Scores from Backend**
 async function fetchScores() {
     try {
         const response = await fetch(`https://your-server-url.com/get-scores?userId=${userId}`);
@@ -50,7 +41,39 @@ async function fetchScores() {
     }
 }
 
-// 📌 Draw Scores Inside Canvas
+// 🚀 **Parallax Background**
+const backgrounds = [
+    { img: new Image(), y: 0 },
+    { img: new Image(), y: -canvas.height },
+    { img: new Image(), y: -canvas.height * 2 }
+];
+backgrounds[0].img.src = "./assets/background1.jpg";
+backgrounds[1].img.src = "./assets/background2.jpg";
+backgrounds[2].img.src = "./assets/background3.jpg";
+
+function updateBackground() {
+    backgrounds.forEach(bg => {
+        bg.y += 1;
+        if (bg.y >= canvas.height) bg.y = -canvas.height * 2;
+    });
+}
+
+function drawBackground() {
+    backgrounds.forEach(bg => ctx.drawImage(bg.img, 0, bg.y, canvas.width, canvas.height));
+}
+
+// 🚀 **Spaceship**
+const spaceship = { x: 175, y: 500, width: 50, height: 50, speed: 6, shield: false, doubleBullets: false };
+
+// 🚀 **Enemy AI - Random Movement**
+function updateEnemies() {
+    enemies.forEach(enemy => {
+        enemy.y += enemy.speed;
+        enemy.x += Math.sin(Date.now() / 300) * 2;  // **Zig-Zag Motion**
+    });
+}
+
+// 🚀 **Draw Functions**
 function drawScores() {
     ctx.fillStyle = "white";
     ctx.font = "18px Arial";
@@ -59,73 +82,57 @@ function drawScores() {
     ctx.fillText(`💰 Current Score: ${coinsEarned}`, 10, 70);
 }
 
-// 📌 Spaceship Data
-const spaceship = { x: 175, y: 500, width: 50, height: 50, speed: 6 };
-
-// 📌 Update Coins
-function updateCoins(coins) {
-    let coinsToAdd = Math.min(coins, 100 - dailyScore);
-    if (coinsToAdd > 0) dailyScore += coinsToAdd;
-    
-    coinsEarned += coins;
-    if (coinsEarned > highScore) highScore = coinsEarned;
-}
-
-// 📌 Draw Functions
 function drawSpaceship() {
     ctx.drawImage(spaceshipImg, spaceship.x, spaceship.y, spaceship.width, spaceship.height);
+    if (spaceship.shield) ctx.drawImage(shieldImg, spaceship.x - 5, spaceship.y - 5, 60, 60);
 }
 
 function drawBullets() {
-    bullets.forEach((bullet) => {
-        ctx.drawImage(bulletImg, bullet.x, bullet.y, 10, 20);
+    bullets.forEach(bullet => ctx.drawImage(bulletImg, bullet.x, bullet.y, 10, 20));
+}
+
+function drawPowerUps() {
+    powerUps.forEach(powerUp => {
+        const img = powerUp.type === "shield" ? shieldImg
+                   : powerUp.type === "doubleBullets" ? doubleBulletsImg
+                   : speedBoostImg;
+        ctx.drawImage(img, powerUp.x, powerUp.y, 30, 30);
     });
 }
 
 function drawEnemies() {
-    enemies.forEach((enemy) => {
-        ctx.drawImage(enemyImg, enemy.x, enemy.y, 40, 40);
-    });
+    enemies.forEach(enemy => ctx.drawImage(enemyImg, enemy.x, enemy.y, 40, 40));
 }
 
-// 📌 Draw Explosions
-function drawExplosions() {
-    explosions.forEach((explosion, index) => {
-        ctx.drawImage(explosionImg, explosion.x, explosion.y, 50, 50);
-        setTimeout(() => {
-            explosions.splice(index, 1);
-        }, 200);
-    });
+// 🚀 **Power-Up Activation**
+function activatePowerUp(type) {
+    powerUpSound.play();
+    if (type === "shield") {
+        spaceship.shield = true;
+        setTimeout(() => spaceship.shield = false, 5000);
+    } else if (type === "doubleBullets") {
+        spaceship.doubleBullets = true;
+        setTimeout(() => spaceship.doubleBullets = false, 5000);
+    } else if (type === "speedBoost") {
+        spaceship.speed = 10;
+        setTimeout(() => spaceship.speed = 6, 5000);
+    }
 }
 
-// 📌 Pixel-Perfect Collision Detection (Restored)
-function isPixelCollision(rect1, rect2) {
-    return (
-        rect1.x < rect2.x + rect2.width &&
-        rect1.x + rect1.width > rect2.x &&
-        rect1.y < rect2.y + rect2.height &&
-        rect1.y + rect1.height > rect2.y
-    );
-}
-
-// 📌 Game Update Loop
-let bgY = 0;
+// 🚀 **Game Update Loop**
 function update() {
     if (gameOver) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // 📌 Background Animation
-    bgY += 2;
-    if (bgY >= canvas.height) bgY = 0;
-    ctx.drawImage(backgroundImg, 0, bgY, canvas.width, canvas.height);
-    ctx.drawImage(backgroundImg, 0, bgY - canvas.height, canvas.width, canvas.height);
-
+    
+    updateBackground();
+    drawBackground();
+    
     drawScores();
     drawSpaceship();
     drawEnemies();
     drawBullets();
-    drawExplosions();
+    drawPowerUps();
 
     bullets.forEach((bullet, index) => {
         bullet.y -= 5;
@@ -133,37 +140,32 @@ function update() {
     });
 
     enemies.forEach((enemy, eIndex) => {
-        enemy.y += 2;
-        enemy.x += Math.sin(enemy.y * 0.05) * 2;
-
-        if (enemy.y > canvas.height) enemies.splice(eIndex, 1);
-
-        if (isPixelCollision(enemy, spaceship)) {
-            gameOver = true;
-            alert("Game Over! Restarting...");
-            setTimeout(() => location.reload(), 2000);
+        if (enemy.y >= canvas.height) enemies.splice(eIndex, 1);
+        if (isCollision(enemy, spaceship)) {
+            if (spaceship.shield) {
+                spaceship.shield = false;
+                enemies.splice(eIndex, 1);
+            } else {
+                gameOver = true;
+                alert("Game Over! Restarting...");
+                setTimeout(() => location.reload(), 2000);
+            }
         }
     });
 
-    for (let i = enemies.length - 1; i >= 0; i--) {
-        for (let j = bullets.length - 1; j >= 0; j--) {
-            if (isPixelCollision(enemies[i], bullets[j])) {
-                bullets.splice(j, 1);
-                explosions.push({ x: enemies[i].x, y: enemies[i].y });
-                enemies.splice(i, 1);
-                explosionSound.play();
-                updateCoins(5);
-                break;
-            }
+    powerUps.forEach((powerUp, index) => {
+        powerUp.y += 2;
+        if (isCollision(powerUp, spaceship)) {
+            activatePowerUp(powerUp.type);
+            powerUps.splice(index, 1);
         }
-    }
+    });
 
     requestAnimationFrame(update);
 }
 
-// 📌 Smooth Movement with Key Controls
-let moveLeft = false;
-let moveRight = false;
+// 🚀 **Player Movement**
+let moveLeft = false, moveRight = false;
 
 document.addEventListener("keydown", (event) => {
     if (event.key === "ArrowLeft") moveLeft = true;
@@ -183,46 +185,25 @@ function movePlayer() {
 
 movePlayer();
 
-// 📌 Cut, Copy, Paste, and Select Buttons (Restored)
-document.getElementById("cutBtn").addEventListener("click", () => document.execCommand("cut"));
-document.getElementById("copyBtn").addEventListener("click", () => document.execCommand("copy"));
-document.getElementById("pasteBtn").addEventListener("click", () => document.execCommand("paste"));
-document.getElementById("selectBtn").addEventListener("click", () => document.execCommand("selectAll"));
+// 🚀 **Collision Detection**
+function isCollision(obj1, obj2) {
+    return obj1.x < obj2.x + obj2.width &&
+           obj1.x + obj1.width > obj2.x &&
+           obj1.y < obj2.y + obj2.height &&
+           obj1.y + obj1.height > obj2.y;
+}
 
-// 📌 Shoot Bullets
-document.getElementById("shootBtn").addEventListener("click", () => {
-    bullets.push({ x: spaceship.x + 22, y: spaceship.y, width: 10, height: 20 });
-});
-
-// 📌 Spawn Enemies (Every 2 Sec)
+// 🚀 **Spawn Enemies**
 setInterval(() => {
-    enemies.push({ x: Math.random() * (canvas.width - 40), y: 0, width: 40, height: 40 });
+    enemies.push({ x: Math.random() * (canvas.width - 40), y: 0, width: 40, height: 40, speed: Math.random() * 2 + 1 });
 }, 2000);
 
+// 🚀 **Spawn Power-ups**
+setInterval(() => {
+    const types = ["shield", "doubleBullets", "speedBoost"];
+    powerUps.push({ x: Math.random() * (canvas.width - 30), y: 0, width: 30, height: 30, type: types[Math.floor(Math.random() * types.length)] });
+}, 10000);
+
+// 🚀 **Start Game**
 update();
 fetchScores();
-
-// 📌 Convert Coins to SM Tokens
-document.getElementById("convertBtn").addEventListener("click", async () => {
-    let coinsToConvert = prompt("Enter coins to convert (Min: 100)");
-    coinsToConvert = parseInt(coinsToConvert);
-
-    if (!coinsToConvert || coinsToConvert < 100) {
-        alert("❌ You must enter at least 100 coins.");
-        return;
-    }
-
-    try {
-        const response = await fetch("https://your-server-url.com/request-token-conversion", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId, username: "Player", coinsRequested: coinsToConvert })
-        });
-
-        const data = await response.json();
-        alert(data.message);
-    } catch (error) {
-        console.error("Error:", error);
-        alert("❌ Conversion failed. Please try again.");
-    }
-});
