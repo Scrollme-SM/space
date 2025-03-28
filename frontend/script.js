@@ -70,7 +70,7 @@ const spaceship = {
     y: 500, 
     width: 50, 
     height: 50, 
-    speed: 8, // Increased speed for faster response
+    speed: 8,
     shield: false, 
     doubleBullets: false,
     speedBoost: false 
@@ -87,67 +87,86 @@ function shoot() {
 }
 
 // 🚀 Control Buttons Inside Canvas
-const leftButton = { x: 20, y: 520, width: 60, height: 60 };
-const rightButton = { x: 100, y: 520, width: 60, height: 60 };
-const shootButton = { x: 320, y: 520, width: 60, height: 60 };
+const leftButton = { x: 20, y: 510, width: 80, height: 80 }; // Size increased to 80x80
+const rightButton = { x: 120, y: 510, width: 80, height: 80 }; // Size increased to 80x80
+const shootButton = { x: 300, y: 510, width: 80, height: 80 }; // Same size as before
 
-let moveLeft = false, moveRight = false;
+let moveLeft = false, moveRight = false, isShooting = false;
 
 function drawControls() {
     // Left Arrow Button
     ctx.fillStyle = moveLeft ? "#00e5ff" : "#0ff";
     ctx.beginPath();
-    ctx.arc(leftButton.x + leftButton.width / 2, leftButton.y + leftButton.height / 2, 30, 0, Math.PI * 2);
+    ctx.arc(leftButton.x + leftButton.width / 2, leftButton.y + leftButton.height / 2, 40, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "black";
-    ctx.font = "30px Arial";
-    ctx.fillText("←", leftButton.x + 20, leftButton.y + 40);
+    ctx.font = "40px Arial";
+    ctx.fillText("←", leftButton.x + 25, leftButton.y + 55);
 
     // Right Arrow Button
     ctx.fillStyle = moveRight ? "#00e5ff" : "#0ff";
     ctx.beginPath();
-    ctx.arc(rightButton.x + rightButton.width / 2, rightButton.y + rightButton.height / 2, 30, 0, Math.PI * 2);
+    ctx.arc(rightButton.x + rightButton.width / 2, rightButton.y + rightButton.height / 2, 40, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "black";
-    ctx.font = "30px Arial";
-    ctx.fillText("→", rightButton.x + 20, rightButton.y + 40);
+    ctx.font = "40px Arial";
+    ctx.fillText("→", rightButton.x + 25, rightButton.y + 55);
 
     // Shoot Button
-    ctx.fillStyle = "#ff4444";
+    ctx.fillStyle = isShooting ? "#ff6666" : "#ff4444";
     ctx.beginPath();
-    ctx.arc(shootButton.x + shootButton.width / 2, shootButton.y + shootButton.height / 2, 30, 0, Math.PI * 2);
+    ctx.arc(shootButton.x + shootButton.width / 2, shootButton.y + shootButton.height / 2, 40, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = "white";
-    ctx.font = "30px Arial";
-    ctx.fillText("🔫", shootButton.x + 15, shootButton.y + 40);
+    ctx.font = "40px Arial";
+    ctx.fillText("🔫", shootButton.x + 20, shootButton.y + 55);
 }
 
 // 🚀 Touch and Mouse Controls
-canvas.addEventListener("mousedown", handleInput);
-canvas.addEventListener("touchstart", handleInput);
-canvas.addEventListener("mouseup", stopInput);
-canvas.addEventListener("touchend", stopInput);
+canvas.addEventListener("mousedown", handleInputStart);
+canvas.addEventListener("touchstart", handleInputStart);
+canvas.addEventListener("mousemove", handleInputMove);
+canvas.addEventListener("touchmove", handleInputMove);
+canvas.addEventListener("mouseup", handleInputEnd);
+canvas.addEventListener("touchend", handleInputEnd);
 
-function handleInput(e) {
+function handleInputStart(e) {
+    e.preventDefault();
     const rect = canvas.getBoundingClientRect();
     const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
     const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
 
     if (isPointInCircle(x, y, leftButton)) moveLeft = true;
     if (isPointInCircle(x, y, rightButton)) moveRight = true;
-    if (isPointInCircle(x, y, shootButton)) shoot();
+    if (isPointInCircle(x, y, shootButton)) {
+        isShooting = true;
+        shoot();
+    }
 }
 
-function stopInput() {
+function handleInputMove(e) {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+
+    moveLeft = isPointInCircle(x, y, leftButton);
+    moveRight = isPointInCircle(x, y, rightButton);
+    isShooting = isPointInCircle(x, y, shootButton);
+    if (isShooting) shoot();
+}
+
+function handleInputEnd() {
     moveLeft = false;
     moveRight = false;
+    isShooting = false;
 }
 
 function isPointInCircle(x, y, button) {
     const centerX = button.x + button.width / 2;
     const centerY = button.y + button.height / 2;
     const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
-    return distance <= 30; // Radius of the button
+    return distance <= 40; // Radius of the button (half of 80)
 }
 
 // 🚀 Keyboard Controls (Optional)
@@ -287,7 +306,7 @@ function update() {
                 setTimeout(() => spaceship.doubleBullets = false, 10000);
             } else if (p.type === "speedBoost") {
                 spaceship.speedBoost = true;
-                spaceship.speed = 12; // Faster with boost
+                spaceship.speed = 12;
                 setTimeout(() => {
                     spaceship.speedBoost = false;
                     spaceship.speed = 8;
