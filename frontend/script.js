@@ -1,8 +1,6 @@
-// 🚀 **User Authentication**
 const userId = localStorage.getItem("userId") || prompt("Enter Telegram ID:");
 localStorage.setItem("userId", userId);
 
-// 🚀 **Game Setup**
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
@@ -20,7 +18,7 @@ const shieldImg = new Image(); shieldImg.src = "./assets/shield.png";
 const doubleBulletsImg = new Image(); doubleBulletsImg.src = "./assets/double-bullets.png";
 const speedBoostImg = new Image(); speedBoostImg.src = "./assets/speed-boost.png";
 
-// 🚀 **Load Sounds**
+// 🎵 **Load Sounds**
 const gameMusic = new Audio("./assets/game-music.mp3");
 const explosionSound = new Audio("./assets/explosion.mp3");
 const powerUpSound = new Audio("./assets/powerup.mp3");
@@ -55,7 +53,7 @@ backgrounds[2].img.src = "./assets/background3.jpg";
 
 function updateBackground() {
     backgrounds.forEach(bg => {
-        bg.y += 1;
+        bg.y += 2; // Smooth scrolling
         if (bg.y >= canvas.height) bg.y = -canvas.height * 2;
     });
 }
@@ -67,11 +65,30 @@ function drawBackground() {
 // 🚀 **Spaceship**
 const spaceship = { x: 175, y: 500, width: 50, height: 50, speed: 6, shield: false, doubleBullets: false };
 
-// 🚀 **Enemy AI - Random Movement**
+// 🚀 **Shooting Mechanism**
+function shoot() {
+    bullets.push({ x: spaceship.x + 20, y: spaceship.y, width: 10, height: 20 });
+}
+
+// 🚀 **Player Controls**
+let moveLeft = false, moveRight = false;
+
+document.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowLeft") moveLeft = true;
+    if (event.key === "ArrowRight") moveRight = true;
+    if (event.key === " ") shoot();
+});
+
+document.addEventListener("keyup", (event) => {
+    if (event.key === "ArrowLeft") moveLeft = false;
+    if (event.key === "ArrowRight") moveRight = false;
+});
+
+// 🚀 **Enemy AI - Move Down**
 function updateEnemies() {
     enemies.forEach(enemy => {
-        enemy.y += enemy.speed;
-        enemy.x += Math.sin(Date.now() / 300) * 2;  // **Zig-Zag Motion**
+        enemy.y += enemy.speed;  // Move down
+        if (enemy.y >= canvas.height) enemy.y = -40; // Reset position if out of bounds
     });
 }
 
@@ -90,35 +107,14 @@ function drawSpaceship() {
 }
 
 function drawBullets() {
-    bullets.forEach(bullet => ctx.drawImage(bulletImg, bullet.x, bullet.y, 10, 20));
-}
-
-function drawPowerUps() {
-    powerUps.forEach(powerUp => {
-        const img = powerUp.type === "shield" ? shieldImg
-                   : powerUp.type === "doubleBullets" ? doubleBulletsImg
-                   : speedBoostImg;
-        ctx.drawImage(img, powerUp.x, powerUp.y, 30, 30);
+    bullets.forEach(bullet => {
+        bullet.y -= 5;  // Move bullets up
+        ctx.drawImage(bulletImg, bullet.x, bullet.y, 10, 20);
     });
 }
 
 function drawEnemies() {
     enemies.forEach(enemy => ctx.drawImage(enemyImg, enemy.x, enemy.y, 40, 40));
-}
-
-// 🚀 **Power-Up Activation**
-function activatePowerUp(type) {
-    powerUpSound.play();
-    if (type === "shield") {
-        spaceship.shield = true;
-        setTimeout(() => spaceship.shield = false, 5000);
-    } else if (type === "doubleBullets") {
-        spaceship.doubleBullets = true;
-        setTimeout(() => spaceship.doubleBullets = false, 5000);
-    } else if (type === "speedBoost") {
-        spaceship.speed = 10;
-        setTimeout(() => spaceship.speed = 6, 5000);
-    }
 }
 
 // 🚀 **Game Update Loop**
@@ -134,12 +130,12 @@ function update() {
     drawSpaceship();
     drawEnemies();
     drawBullets();
-    drawPowerUps();
 
     bullets.forEach((bullet, index) => {
-        bullet.y -= 5;
-        if (bullet.y < 0) bullets.splice(index, 1);
+        if (bullet.y < 0) bullets.splice(index, 1); // Remove bullets when out of bounds
     });
+
+    updateEnemies();
 
     enemies.forEach((enemy, eIndex) => {
         if (enemy.y >= canvas.height) enemies.splice(eIndex, 1);
@@ -155,30 +151,10 @@ function update() {
         }
     });
 
-    powerUps.forEach((powerUp, index) => {
-        powerUp.y += 2;
-        if (isCollision(powerUp, spaceship)) {
-            activatePowerUp(powerUp.type);
-            powerUps.splice(index, 1);
-        }
-    });
-
     requestAnimationFrame(update);
 }
 
 // 🚀 **Player Movement**
-let moveLeft = false, moveRight = false;
-
-document.addEventListener("keydown", (event) => {
-    if (event.key === "ArrowLeft") moveLeft = true;
-    if (event.key === "ArrowRight") moveRight = true;
-});
-
-document.addEventListener("keyup", (event) => {
-    if (event.key === "ArrowLeft") moveLeft = false;
-    if (event.key === "ArrowRight") moveRight = false;
-});
-
 function movePlayer() {
     if (moveLeft) spaceship.x = Math.max(0, spaceship.x - spaceship.speed);
     if (moveRight) spaceship.x = Math.min(canvas.width - spaceship.width, spaceship.x + spaceship.speed);
@@ -199,12 +175,6 @@ function isCollision(obj1, obj2) {
 setInterval(() => {
     enemies.push({ x: Math.random() * (canvas.width - 40), y: 0, width: 40, height: 40, speed: Math.random() * 2 + 1 });
 }, 2000);
-
-// 🚀 **Spawn Power-ups**
-setInterval(() => {
-    const types = ["shield", "doubleBullets", "speedBoost"];
-    powerUps.push({ x: Math.random() * (canvas.width - 30), y: 0, width: 30, height: 30, type: types[Math.floor(Math.random() * types.length)] });
-}, 10000);
 
 // 🚀 **Start Game**
 update();
