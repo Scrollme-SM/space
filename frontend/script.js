@@ -9,7 +9,7 @@ const ctx = canvas.getContext("2d");
 const bullets = [];
 const enemies = [];
 const powerUps = [];
-const explosions = []; // Array to store explosion animations
+const explosions = [];
 let coinsEarned = 0, dailyScore = 0, highScore = 0, gameOver = false;
 
 // 🚀 Load Images
@@ -56,7 +56,7 @@ backgrounds[2].img.src = "./assets/background3.jpg";
 
 function updateBackground() {
     backgrounds.forEach(bg => {
-        bg.y += 1;
+        bg.y += 10; // Increased speed to 10 (10x faster)
         if (bg.y >= canvas.height) bg.y = -canvas.height * 2;
     });
 }
@@ -67,8 +67,8 @@ function drawBackground() {
 
 // 🚀 Spaceship
 const spaceship = { 
-    x: 175, 
-    y: 500, 
+    x: 150, // Adjusted for new canvas width
+    y: 425, // Adjusted for new canvas height
     width: 50, 
     height: 50, 
     speed: 8,
@@ -88,8 +88,8 @@ function shoot() {
 }
 
 // 🚀 Control Buttons Inside Canvas
-const leftButton = { x: 10, y: 510, width: 80, height: 80 }; // Moved to extreme left
-const rightButton = { x: 310, y: 510, width: 80, height: 80 }; // Moved to extreme right
+const leftButton = { x: 10, y: 435, width: 80, height: 80 }; // Adjusted for new canvas height
+const rightButton = { x: 260, y: 435, width: 80, height: 80 }; // Adjusted for new canvas width and height
 
 let moveLeft = false, moveRight = false;
 
@@ -114,14 +114,14 @@ function drawControls() {
 }
 
 // 🚀 Touch and Mouse Controls
-canvas.addEventListener("mousedown", handleInputStart);
-canvas.addEventListener("touchstart", handleInputStart);
+canvas.addEventListener("mousedown", handleInput);
+canvas.addEventListener("touchstart", handleInput);
 canvas.addEventListener("mousemove", handleInputMove);
 canvas.addEventListener("touchmove", handleInputMove);
-canvas.addEventListener("mouseup", handleInputEnd);
-canvas.addEventListener("touchend", handleInputEnd);
+canvas.addEventListener("mouseup", stopInput);
+canvas.addEventListener("touchend", stopInput);
 
-function handleInputStart(e) {
+function handleInput(e) {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
     const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
@@ -141,7 +141,7 @@ function handleInputMove(e) {
     moveRight = isPointInCircle(x, y, rightButton);
 }
 
-function handleInputEnd() {
+function stopInput() {
     moveLeft = false;
     moveRight = false;
 }
@@ -258,7 +258,7 @@ function update() {
 
     // Automatic Shooting
     shootTimer++;
-    if (shootTimer >= 20) { // Shoot every 20 frames (~0.33 seconds at 60 FPS)
+    if (shootTimer >= 20) {
         shoot();
         shootTimer = 0;
     }
@@ -273,7 +273,7 @@ function update() {
         enemies.forEach((enemy, eIndex) => {
             if (isCollision(bullet, enemy)) {
                 explosionSound.play();
-                explosions.push({ x: enemy.x, y: enemy.y, timer: 10 }); // Explosion lasts 10 frames
+                explosions.push({ x: enemy.x, y: enemy.y, timer: 10 });
                 enemies.splice(eIndex, 1);
                 bullets.splice(index, 1);
                 coinsEarned += 10;
@@ -329,7 +329,7 @@ function resetGame() {
     powerUps.length = 0;
     explosions.length = 0;
     coinsEarned = 0;
-    spaceship.x = 175;
+    spaceship.x = 150;
     spaceship.shield = false;
     spaceship.doubleBullets = false;
     spaceship.speedBoost = false;
