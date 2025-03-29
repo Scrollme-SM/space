@@ -9,6 +9,7 @@ const ctx = canvas.getContext("2d");
 const bullets = [];
 const enemies = [];
 const powerUps = [];
+const explosions = []; // Array to store explosion animations
 let coinsEarned = 0, dailyScore = 0, highScore = 0, gameOver = false;
 
 // 🚀 Load Images
@@ -76,7 +77,7 @@ const spaceship = {
     speedBoost: false 
 };
 
-// 🚀 Shooting Mechanism
+// 🚀 Shooting Mechanism (Automatic)
 function shoot() {
     if (spaceship.doubleBullets) {
         bullets.push({ x: spaceship.x + 5, y: spaceship.y, width: 10, height: 20 });
@@ -87,11 +88,10 @@ function shoot() {
 }
 
 // 🚀 Control Buttons Inside Canvas
-const leftButton = { x: 20, y: 510, width: 80, height: 80 }; // Size increased to 80x80
-const rightButton = { x: 120, y: 510, width: 80, height: 80 }; // Size increased to 80x80
-const shootButton = { x: 300, y: 510, width: 80, height: 80 }; // Same size as before
+const leftButton = { x: 10, y: 510, width: 80, height: 80 }; // Moved to extreme left
+const rightButton = { x: 310, y: 510, width: 80, height: 80 }; // Moved to extreme right
 
-let moveLeft = false, moveRight = false, isShooting = false;
+let moveLeft = false, moveRight = false;
 
 function drawControls() {
     // Left Arrow Button
@@ -111,15 +111,6 @@ function drawControls() {
     ctx.fillStyle = "black";
     ctx.font = "40px Arial";
     ctx.fillText("→", rightButton.x + 25, rightButton.y + 55);
-
-    // Shoot Button
-    ctx.fillStyle = isShooting ? "#ff6666" : "#ff4444";
-    ctx.beginPath();
-    ctx.arc(shootButton.x + shootButton.width / 2, shootButton.y + shootButton.height / 2, 40, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "white";
-    ctx.font = "40px Arial";
-    ctx.fillText("🔫", shootButton.x + 20, shootButton.y + 55);
 }
 
 // 🚀 Touch and Mouse Controls
@@ -138,10 +129,6 @@ function handleInputStart(e) {
 
     if (isPointInCircle(x, y, leftButton)) moveLeft = true;
     if (isPointInCircle(x, y, rightButton)) moveRight = true;
-    if (isPointInCircle(x, y, shootButton)) {
-        isShooting = true;
-        shoot();
-    }
 }
 
 function handleInputMove(e) {
@@ -152,28 +139,24 @@ function handleInputMove(e) {
 
     moveLeft = isPointInCircle(x, y, leftButton);
     moveRight = isPointInCircle(x, y, rightButton);
-    isShooting = isPointInCircle(x, y, shootButton);
-    if (isShooting) shoot();
 }
 
 function handleInputEnd() {
     moveLeft = false;
     moveRight = false;
-    isShooting = false;
 }
 
 function isPointInCircle(x, y, button) {
     const centerX = button.x + button.width / 2;
     const centerY = button.y + button.height / 2;
     const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
-    return distance <= 40; // Radius of the button (half of 80)
+    return distance <= 40;
 }
 
 // 🚀 Keyboard Controls (Optional)
 document.addEventListener("keydown", (event) => {
     if (event.key === "ArrowLeft") moveLeft = true;
     if (event.key === "ArrowRight") moveRight = true;
-    if (event.key === " ") shoot();
 });
 
 document.addEventListener("keyup", (event) => {
@@ -239,6 +222,14 @@ function drawPowerUps() {
     });
 }
 
+function drawExplosions() {
+    explosions.forEach((exp, index) => {
+        ctx.drawImage(explosionImg, exp.x, exp.y, 40, 40);
+        exp.timer--;
+        if (exp.timer <= 0) explosions.splice(index, 1);
+    });
+}
+
 // 🚀 Collision Detection
 function isCollision(obj1, obj2) {
     return obj1.x < obj2.x + obj2.width &&
@@ -248,6 +239,7 @@ function isCollision(obj1, obj2) {
 }
 
 // 🚀 Game Update Loop
+let shootTimer = 0;
 function update() {
     if (gameOver) return;
 
@@ -262,6 +254,14 @@ function update() {
     drawBullets();
     drawPowerUps();
     drawControls();
+    drawExplosions();
+
+    // Automatic Shooting
+    shootTimer++;
+    if (shootTimer >= 20) { // Shoot every 20 frames (~0.33 seconds at 60 FPS)
+        shoot();
+        shootTimer = 0;
+    }
 
     // Update Spaceship Movement
     if (moveLeft) spaceship.x = Math.max(0, spaceship.x - spaceship.speed);
@@ -273,6 +273,7 @@ function update() {
         enemies.forEach((enemy, eIndex) => {
             if (isCollision(bullet, enemy)) {
                 explosionSound.play();
+                explosions.push({ x: enemy.x, y: enemy.y, timer: 10 }); // Explosion lasts 10 frames
                 enemies.splice(eIndex, 1);
                 bullets.splice(index, 1);
                 coinsEarned += 10;
@@ -326,12 +327,14 @@ function resetGame() {
     enemies.length = 0;
     bullets.length = 0;
     powerUps.length = 0;
+    explosions.length = 0;
     coinsEarned = 0;
     spaceship.x = 175;
     spaceship.shield = false;
     spaceship.doubleBullets = false;
     spaceship.speedBoost = false;
     spaceship.speed = 8;
+    shootTimer = 0;
     update();
 }
 
