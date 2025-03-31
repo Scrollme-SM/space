@@ -1,54 +1,50 @@
-/* 📌 General Styles */
+/* General Styles */
 body {
-    text-align: center;
-    background-color: black;
-    color: white;
-    font-family: Arial, sans-serif;
-    overflow: hidden;
-    position: relative;
     margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: black;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
 }
 
-/* 📌 Moving Starfield Background */
-body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: url('stars.png');
-    animation: starfield 10s linear infinite;
-    opacity: 0.7;
+/* Game Container (Stacks Canvas & Button Vertically) */
+.game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
-@keyframes starfield {
-    from { transform: translateY(0); }
-    to { transform: translateY(-100%); }
+/* Game Canvas */
+#gameCanvas {
+    background-color: #000;
+    border: 2px solid #fff;
 }
 
-/* 📌 Game Canvas */
-canvas {
-    border: 2px solid white;
+/* Convert Coins Button */
+.convert-btn {
     display: block;
-    margin: auto;
-    box-shadow: 0 0 10px white;
-}
-
-/* 📌 Convert Button */
-#convertBtn {
-    background: #FF9800;
-    color: white;
+    width: 90%;
+    max-width: 300px;
+    margin-top: 10px; /* Space between canvas & button */
     padding: 12px;
-    margin-top: 40px;
-    font-size: 16px;
-    border: none;
-    border-radius: 5px;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    color: black;
+    background: linear-gradient(90deg, #ffcc00, #ffdd44); /* Bright yellow gradient */
+    border: 2px solid #ffcc00;
+    border-radius: 8px;
     cursor: pointer;
-    box-shadow: 0 0 10px #FF9800;
-    transition: box-shadow 0.3s ease-in-out;
+    box-shadow: 0px 4px 10px rgba(255, 204, 0, 0.5);
+    transition: all 0.2s ease-in-out;
 }
 
-#convertBtn:hover {
-    box-shadow: 0 0 15px #FFA726;
+.convert-btn:hover {
+    background: linear-gradient(90deg, #ffdd44, #ffee66); /* Lighter yellow on hover */
+    transform: scale(1.05);
 }
